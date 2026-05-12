@@ -49,7 +49,7 @@ Required local environment variables:
 
 ```text
 PORT=3001
-WEB_ORIGIN=http://localhost:5173
+WEB_ORIGIN=http://localhost:5174
 DATABASE_URL=file:./dev.db
 APP_TIMEZONE=UTC
 GOOGLE_CLIENT_ID=
@@ -99,7 +99,7 @@ http://localhost:3001/api
 Web app:
 
 ```text
-http://localhost:5173
+http://localhost:5174
 ```
 
 Health endpoint:
