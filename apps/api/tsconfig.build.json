@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "@habit-tracker/shared": ["../../packages/shared/dist/index.d.ts"]
+    }
+  },
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "test/**/*.ts", "vitest.config.ts"]
+}

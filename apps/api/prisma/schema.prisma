@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String                  @id @default(cuid())
+  provider             String
+  providerUserId       String
+  email                String?
+  displayName          String
+  avatarUrl            String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  habits               Habit[]
+  checkIns             CheckIn[]
+  milestoneNotifications MilestoneNotification[]
+
+  @@unique([provider, providerUserId])
+}
+
+model Habit {
+  id                     String                  @id @default(cuid())
+  userId                 String
+  name                   String
+  description            String?
+  startDate              String
+  status                 String                  @default("ACTIVE")
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkIns               CheckIn[]
+  milestoneNotifications MilestoneNotification[]
+
+  @@index([userId])
+  @@unique([id, userId])
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  habitId   String
+  userId    String
+  date      String
+  createdAt DateTime @default(now())
+  habit     Habit    @relation(fields: [habitId, userId], references: [id, userId], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([userId])
+}
+
+model MilestoneNotification {
+  id             String    @id @default(cuid())
+  habitId        String
+  userId         String
+  milestone      Int
+  sentAt         DateTime  @default(now())
+  acknowledgedAt DateTime?
+  habit          Habit     @relation(fields: [habitId, userId], references: [id, userId], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, milestone])
+  @@index([userId])
+}
