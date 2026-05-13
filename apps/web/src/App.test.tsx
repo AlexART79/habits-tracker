@@ -48,9 +48,7 @@ describe('App', () => {
 
     render(<App />);
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Checking sign-in status...',
-    );
+    expect(screen.getByRole('status')).toHaveTextContent('Checking sign-in status...');
   });
 
   it('renders Google and GitHub login buttons when unauthenticated', async () => {
@@ -58,12 +56,14 @@ describe('App', () => {
 
     render(<App />);
 
-    expect(
-      await screen.findByRole('link', { name: 'Continue with Google' }),
-    ).toHaveAttribute('href', '/api/auth/google');
-    expect(
-      screen.getByRole('link', { name: 'Continue with GitHub' }),
-    ).toHaveAttribute('href', '/api/auth/github');
+    expect(await screen.findByRole('link', { name: 'Continue with Google' })).toHaveAttribute(
+      'href',
+      '/api/auth/google',
+    );
+    expect(screen.getByRole('link', { name: 'Continue with GitHub' })).toHaveAttribute(
+      'href',
+      '/api/auth/github',
+    );
   });
 
   it('renders authenticated shell with the user display name', async () => {
@@ -92,7 +92,7 @@ describe('App', () => {
 
     render(<App />);
 
-    const header = (await screen.findByText('Habit Tracker with Streaks')).closest('header');
+    const header = (await screen.findByText('Habit Tracker')).closest('header');
 
     expect(header).toHaveClass('sticky', 'top-0', 'z-30', 'shadow-md');
     expect(header).not.toHaveClass('rounded-lg', 'border');
@@ -128,9 +128,7 @@ describe('App', () => {
     expect(document.documentElement).toHaveClass('dark');
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
     expect(localStorage.getItem('habit-tracker-theme')).toBe('dark');
-    expect(
-      screen.getByRole('button', { name: 'Switch to light theme' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Switch to light theme' })).toBeInTheDocument();
   });
 
   it('logs out and returns to the login screen', async () => {
@@ -148,9 +146,7 @@ describe('App', () => {
       method: 'POST',
       credentials: 'include',
     });
-    expect(
-      await screen.findByRole('link', { name: 'Continue with Google' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Continue with Google' })).toBeInTheDocument();
   });
 
   it('shows habit list loading, empty, and error states', async () => {
@@ -176,9 +172,7 @@ describe('App', () => {
       .mockResolvedValueOnce(new Response(null, { status: 500 }));
     render(<App />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Unable to load habits.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load habits.');
   });
 
   it('renders habit cards with status and details', async () => {
@@ -210,18 +204,18 @@ describe('App', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Name is required.');
 
     await user.type(screen.getByLabelText('Habit name'), 'Read daily');
-    await user.type(
-      screen.getByLabelText('Description'),
-      'Read for twenty minutes',
-    );
+    await user.type(screen.getByLabelText('Description'), 'Read for twenty minutes');
     await user.clear(screen.getByLabelText('Start date'));
     await user.type(screen.getByLabelText('Start date'), '2026-05-13');
     await user.click(screen.getByRole('button', { name: 'Save habit' }));
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('/api/habits', expect.objectContaining({
-        method: 'POST',
-      }));
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/habits',
+        expect.objectContaining({
+          method: 'POST',
+        }),
+      );
     });
     expect(await screen.findByText('Read daily')).toBeInTheDocument();
   });
@@ -262,9 +256,12 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
 
     expect(await screen.findByText('Read deeply')).toBeInTheDocument();
-    expect(mockFetch).toHaveBeenCalledWith('/api/habits/habit-1', expect.objectContaining({
-      method: 'PATCH',
-    }));
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/habits/habit-1',
+      expect.objectContaining({
+        method: 'PATCH',
+      }),
+    );
   });
 
   it('changes habit status and shows archived habits as read-only', async () => {
@@ -293,9 +290,7 @@ describe('App', () => {
     await user.click(archiveButton);
     expect(await screen.findByText('ARCHIVED')).toBeInTheDocument();
     expect(screen.getByText('Archived habits are read-only.')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Edit Read daily' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit Read daily' })).not.toBeInTheDocument();
   });
 
   it('requires confirmation before deleting a habit', async () => {
@@ -312,9 +307,7 @@ describe('App', () => {
     expect(deleteButton).not.toHaveTextContent('Delete');
 
     await user.click(deleteButton);
-    expect(
-      screen.getByText('Are you sure you want to delete Read daily?'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Are you sure you want to delete Read daily?')).toBeInTheDocument();
     expect(mockFetch).not.toHaveBeenCalledWith('/api/habits/habit-1', {
       method: 'DELETE',
       credentials: 'include',
