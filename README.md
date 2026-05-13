@@ -4,7 +4,7 @@ A full-stack TypeScript habit tracker for building routines, tracking daily chec
 
 ## Project Status
 
-Current status: Phase 2 habit CRUD.
+Current status: Phase 3 daily check-ins and streak calculations.
 
 Implemented now:
 
@@ -19,8 +19,11 @@ Implemented now:
 - Authenticated habit CRUD with owner-only access
 - Habit status transitions for Active, Paused, and Archived habits
 - React habit dashboard with loading, empty, error, validation, create, edit, status, and delete states
+- Today-only check-ins and undo for active habits
+- Current, best, and total streak metrics on habit cards
+- Current-month check-in history for each habit
 
-Planned later phases add check-ins, streak calculations, search/filter UI, and WebSocket milestone notifications.
+Planned later phases add search/filter UI and WebSocket milestone notifications.
 
 ## Stack
 
@@ -88,6 +91,19 @@ npm run prisma:migrate -w apps/api
 ```
 
 With `DATABASE_URL=file:./dev.db`, Prisma stores the local database at `apps/api/prisma/dev.db`.
+
+Seed reusable habit/check-in data for manual streak testing:
+
+```powershell
+npm run seed
+```
+
+The seed targets user `cmp49ummz0000jiqbx6uq6c6j` by default and recreates only its debug habits. To target another existing user for local debugging, set `SEED_USER_ID` first:
+
+```powershell
+$env:SEED_USER_ID = "existing-user-id"
+npm run seed
+```
 
 Windows troubleshooting: if `prisma migrate dev` fails with a blank schema-engine error, the local database may not have been created or migrated. The committed initial migration SQL is present under `apps/api/prisma/migrations`, but `npm run prisma:generate -w apps/api` only regenerates the Prisma client. Use `npm run typecheck`, `npm run lint`, and `npm test` to validate the code path, then rerun or fix migration before relying on the local runtime database.
 
@@ -213,11 +229,6 @@ POST   /api/habits
 GET    /api/habits/:id
 PATCH  /api/habits/:id
 DELETE /api/habits/:id
-```
-
-Planned API surface:
-
-```text
 POST   /api/habits/:habitId/check-ins/today
 DELETE /api/habits/:habitId/check-ins/today
 GET    /api/habits/:habitId/check-ins?month=YYYY-MM
@@ -248,6 +259,10 @@ Habit responses include:
   "description": "Read for twenty minutes",
   "startDate": "2026-05-13",
   "status": "ACTIVE",
+  "currentStreak": 1,
+  "bestStreak": 3,
+  "totalCheckIns": 7,
+  "completedToday": true,
   "createdAt": "2026-05-13T12:00:00.000Z",
   "updatedAt": "2026-05-13T12:00:00.000Z"
 }
@@ -264,6 +279,26 @@ Supported statuses are `ACTIVE`, `PAUSED`, and `ARCHIVED`.
 - `ARCHIVED` habits are read-only; normal edits return `409 Conflict`.
 - `DELETE /api/habits/:id` remains allowed for archived habits.
 - Cross-account read, edit, and delete attempts return `403 Forbidden` when the habit exists but belongs to another user.
+
+### Check-in API
+
+The backend owns “today” using `APP_TIMEZONE`; the frontend never sends a check-in date.
+
+```text
+POST   /api/habits/:habitId/check-ins/today
+DELETE /api/habits/:habitId/check-ins/today
+GET    /api/habits/:habitId/check-ins?month=YYYY-MM
+```
+
+Rules:
+
+- Only `ACTIVE` habits can receive check-ins.
+- A habit can be checked in once per backend-defined calendar date.
+- Duplicate today check-ins return `409 Conflict`.
+- Paused and archived habits reject check-ins with `409 Conflict`.
+- Undo removes only today’s check-in.
+- Month history returns the owned habit’s check-ins for the requested `YYYY-MM`.
+- Cross-account check-in and history access is blocked.
 
 ## WebSocket Message Format
 
@@ -316,12 +351,11 @@ Notifications are evaluated when the WebSocket connection opens, sent after the 
 
 ## Streak Notes
 
-Streak calculation is planned for Phase 3 and should be implemented as pure, well-tested logic.
-
 Rules:
 
 - Current streak, best streak, and total check-ins are calculated per habit.
 - Streaks are based on consecutive calendar days.
+- Current streak counts consecutive check-ins ending on backend-defined today; if today is missing, current streak is `0`.
 - A missed required day resets the current streak.
 - Paused status does not preserve streak in the MVP.
 - Best streak remains the historical maximum.

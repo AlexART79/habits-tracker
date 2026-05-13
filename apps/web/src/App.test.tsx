@@ -32,6 +32,10 @@ describe('App', () => {
     description: 'Read for twenty minutes',
     startDate: '2026-05-13',
     status: 'ACTIVE',
+    currentStreak: 0,
+    bestStreak: 2,
+    totalCheckIns: 5,
+    completedToday: false,
     createdAt: '2026-05-13T12:00:00.000Z',
     updatedAt: '2026-05-13T12:00:00.000Z',
   };
@@ -186,6 +190,119 @@ describe('App', () => {
     expect(screen.getByText('ACTIVE')).toBeInTheDocument();
     expect(screen.getByText('Read for twenty minutes')).toBeInTheDocument();
     expect(screen.getByText('Starts 2026-05-13')).toBeInTheDocument();
+    expect(screen.getByText('Current streak')).toBeInTheDocument();
+    expect(screen.getByText('Best streak')).toBeInTheDocument();
+    expect(screen.getByText('Total check-ins')).toBeInTheDocument();
+  });
+
+  it('checks in an active habit and refreshes to the undo state', async () => {
+    const checkedHabit = {
+      ...activeHabit,
+      completedToday: true,
+      currentStreak: 1,
+      bestStreak: 2,
+      totalCheckIns: 6,
+    };
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [activeHabit] }))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            checkIn: {
+              id: 'check-in-1',
+              habitId: 'habit-1',
+              date: '2026-05-14',
+              createdAt: '2026-05-14T12:00:00.000Z',
+            },
+            habit: checkedHabit,
+          },
+          201,
+        ),
+      )
+      .mockResolvedValueOnce(jsonResponse({ habits: [checkedHabit] }));
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Check in Read daily' }));
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits/habit-1/check-ins/today', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    expect(await screen.findByRole('button', { name: 'Undo check-in Read daily' })).toBeInTheDocument();
+    expect(screen.getAllByText('1').length).toBeGreaterThan(0);
+  });
+
+  it('undoes today check-in and refreshes to the check-in state', async () => {
+    const checkedHabit = {
+      ...activeHabit,
+      completedToday: true,
+      currentStreak: 1,
+      totalCheckIns: 6,
+    };
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [checkedHabit] }))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, habit: activeHabit }))
+      .mockResolvedValueOnce(jsonResponse({ habits: [activeHabit] }));
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Undo check-in Read daily' }));
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits/habit-1/check-ins/today', {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    expect(await screen.findByRole('button', { name: 'Check in Read daily' })).toBeInTheDocument();
+  });
+
+  it('keeps check-in actions unavailable for paused and archived habits', async () => {
+    const pausedHabit = { ...activeHabit, id: 'habit-2', name: 'Walk outside', status: 'PAUSED' };
+    const archivedHabit = { ...activeHabit, id: 'habit-3', name: 'Journal', status: 'ARCHIVED' };
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [pausedHabit, archivedHabit] }));
+
+    render(<App />);
+
+    expect(await screen.findByText('Paused habits cannot be checked in.')).toBeInTheDocument();
+    expect(screen.getByText('Archived habits cannot be checked in.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Check in Walk outside' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Check in Journal' })).not.toBeInTheDocument();
+  });
+
+  it('shows current month check-in history states', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [activeHabit] }))
+      .mockResolvedValueOnce(jsonResponse({ checkIns: [] }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          checkIns: [
+            {
+              id: 'check-in-1',
+              habitId: 'habit-1',
+              date: '2026-05-14',
+              createdAt: '2026-05-14T12:00:00.000Z',
+            },
+          ],
+        }),
+      );
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Show check-in history for Read daily' }));
+    expect(await screen.findByText('No check-ins this month.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Hide check-in history for Read daily' }));
+    await user.click(screen.getByRole('button', { name: 'Show check-in history for Read daily' }));
+
+    expect(await screen.findByText('2026-05-14')).toBeInTheDocument();
   });
 
   it('validates and creates a habit from the form', async () => {

@@ -1,9 +1,20 @@
 import type { HabitResponse, HabitStatus } from '@habit-tracker/shared';
-import { Archive, CalendarDays, Pencil, Play, Pause, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  CalendarCheck,
+  CalendarDays,
+  CheckCircle2,
+  Pencil,
+  Play,
+  Pause,
+  RotateCcw,
+  Trash2,
+} from 'lucide-react';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { IconButton } from '../../components/IconButton';
+import { CheckInHistory } from './CheckInHistory';
 
 type HabitCardProps = {
   habit: HabitResponse;
@@ -12,11 +23,13 @@ type HabitCardProps = {
   isMutating: boolean;
   onCancelArchive: () => void;
   onCancelDelete: () => void;
+  onCheckIn: (habit: HabitResponse) => Promise<void>;
   onDelete: (habit: HabitResponse) => Promise<void>;
   onEdit: (habit: HabitResponse) => void;
   onRequestArchive: (habit: HabitResponse) => void;
   onRequestDelete: (habit: HabitResponse) => void;
   onStatusChange: (habit: HabitResponse, status: HabitStatus) => Promise<void>;
+  onUndoCheckIn: (habit: HabitResponse) => Promise<void>;
 };
 
 export function HabitCard({
@@ -26,11 +39,13 @@ export function HabitCard({
   isMutating,
   onCancelArchive,
   onCancelDelete,
+  onCheckIn,
   onDelete,
   onEdit,
   onRequestArchive,
   onRequestDelete,
   onStatusChange,
+  onUndoCheckIn,
 }: HabitCardProps): JSX.Element {
   const isArchived = habit.status === 'ARCHIVED';
   const statusTone =
@@ -58,6 +73,55 @@ export function HabitCard({
         </p>
       ) : null}
 
+      <div className="grid gap-3 sm:grid-cols-3" aria-label={`${habit.name} streak summary`}>
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Current streak</p>
+          <p className="text-2xl font-bold text-slate-950 dark:text-white">{habit.currentStreak}</p>
+        </div>
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Best streak</p>
+          <p className="text-2xl font-bold text-slate-950 dark:text-white">{habit.bestStreak}</p>
+        </div>
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total check-ins</p>
+          <p className="text-2xl font-bold text-slate-950 dark:text-white">{habit.totalCheckIns}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        {habit.status === 'ACTIVE' ? (
+          habit.completedToday ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void onUndoCheckIn(habit)}
+              disabled={isMutating}
+              aria-label={`Undo check-in ${habit.name}`}
+            >
+              <RotateCcw className="h-4 w-4" aria-hidden="true" />
+              Undo today
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => void onCheckIn(habit)}
+              disabled={isMutating}
+              aria-label={`Check in ${habit.name}`}
+            >
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              Check in today
+            </Button>
+          )
+        ) : (
+          <p className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+            {habit.status === 'PAUSED'
+              ? 'Paused habits cannot be checked in.'
+              : 'Archived habits cannot be checked in.'}
+          </p>
+        )}
+      </div>
+
       {isArchiving ? (
         <div className="grid gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/40 dark:bg-amber-500/10 sm:grid-cols-[1fr_auto] sm:items-center">
           <p className="font-medium text-amber-900 dark:text-amber-100">
@@ -69,6 +133,7 @@ export function HabitCard({
               variant="secondary"
               onClick={onCancelArchive}
               disabled={isMutating}
+              aria-label={`Cancel archive ${habit.name}`}
             >
               Cancel
             </Button>
@@ -77,6 +142,7 @@ export function HabitCard({
               variant="danger"
               onClick={() => void onStatusChange(habit, 'ARCHIVED')}
               disabled={isMutating}
+              aria-label={`Confirm archive ${habit.name}`}
             >
               <Archive className="h-4 w-4" aria-hidden="true" />
               Confirm archive
@@ -104,6 +170,7 @@ export function HabitCard({
               variant="danger"
               onClick={() => void onDelete(habit)}
               disabled={isMutating}
+              aria-label={`Confirm delete ${habit.name}`}
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
               Confirm delete
@@ -166,6 +233,8 @@ export function HabitCard({
           <Trash2 className="h-4 w-4" aria-hidden="true" />
         </IconButton>
       </div>
+
+      <CheckInHistory habitId={habit.id} habitName={habit.name} />
     </Card>
   );
 }

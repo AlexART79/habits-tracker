@@ -4,16 +4,22 @@ import type {
   HabitListResponse,
   HabitResponse,
   HealthResponse,
+  CheckInListResponse,
+  CheckInTodayResponse,
+  UndoCheckInResponse,
 } from '@habit-tracker/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   createHabit,
+  checkInToday,
   deleteHabit,
   getCurrentUser,
   getHealth,
+  listCheckIns,
   listHabits,
   logout,
+  undoTodayCheckIn,
   updateHabit,
 } from './apiClient';
 
@@ -105,6 +111,10 @@ describe('habit API', () => {
     description: 'Read for twenty minutes',
     startDate: '2026-05-13',
     status: 'ACTIVE',
+    currentStreak: 0,
+    bestStreak: 0,
+    totalCheckIns: 0,
+    completedToday: false,
     createdAt: '2026-05-13T12:00:00.000Z',
     updatedAt: '2026-05-13T12:00:00.000Z',
   };
@@ -189,5 +199,69 @@ describe('habit API', () => {
     mockFetch.mockResolvedValue(new Response(null, { status: 500 }));
 
     await expect(listHabits()).rejects.toThrow('Unable to load habits.');
+  });
+
+  it('creates a today check-in with cookies included', async () => {
+    const response: CheckInTodayResponse = {
+      checkIn: {
+        id: 'check-in-1',
+        habitId: 'habit-1',
+        date: '2026-05-14',
+        createdAt: '2026-05-14T12:00:00.000Z',
+      },
+      habit: { ...habitResponse, completedToday: true, currentStreak: 1, bestStreak: 1, totalCheckIns: 1 },
+    };
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(checkInToday('habit-1')).resolves.toEqual(response);
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits/habit-1/check-ins/today', {
+      method: 'POST',
+      credentials: 'include',
+    });
+  });
+
+  it('undoes today check-in with cookies included', async () => {
+    const response: UndoCheckInResponse = { ok: true, habit: habitResponse };
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(undoTodayCheckIn('habit-1')).resolves.toEqual(response);
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits/habit-1/check-ins/today', {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+  });
+
+  it('lists check-ins for a month with cookies included', async () => {
+    const response: CheckInListResponse = {
+      checkIns: [
+        {
+          id: 'check-in-1',
+          habitId: 'habit-1',
+          date: '2026-05-14',
+          createdAt: '2026-05-14T12:00:00.000Z',
+        },
+      ],
+    };
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(listCheckIns('habit-1', '2026-05')).resolves.toEqual(response);
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits/habit-1/check-ins?month=2026-05', {
+      credentials: 'include',
+    });
   });
 });

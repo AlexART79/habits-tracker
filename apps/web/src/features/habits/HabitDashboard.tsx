@@ -9,9 +9,11 @@ import { Activity, Archive, CirclePause, CirclePlus, ListChecks } from 'lucide-r
 import { Button } from '../../components/Button';
 import { StatTile } from '../../components/StatTile';
 import {
+  checkInToday,
   createHabit,
   deleteHabit,
   listHabits,
+  undoTodayCheckIn,
   updateHabit,
 } from '../../lib/apiClient';
 import { HabitForm } from './HabitForm';
@@ -98,6 +100,32 @@ export function HabitDashboard(): JSX.Element {
     }
   }
 
+  async function completeToday(habit: HabitResponse): Promise<void> {
+    setIsMutating(true);
+    setListError(null);
+    try {
+      await checkInToday(habit.id);
+      await loadHabits();
+    } catch (error) {
+      setListError(error instanceof Error ? error.message : 'Unable to check in habit.');
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function undoToday(habit: HabitResponse): Promise<void> {
+    setIsMutating(true);
+    setListError(null);
+    try {
+      await undoTodayCheckIn(habit.id);
+      await loadHabits();
+    } catch (error) {
+      setListError(error instanceof Error ? error.message : 'Unable to undo check-in.');
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
   const activeCount = habits.filter((habit) => habit.status === 'ACTIVE').length;
   const pausedCount = habits.filter((habit) => habit.status === 'PAUSED').length;
   const archivedCount = habits.filter((habit) => habit.status === 'ARCHIVED').length;
@@ -162,6 +190,7 @@ export function HabitDashboard(): JSX.Element {
           setFormState({ mode: 'edit', habit });
         }}
         onCancelDelete={() => setDeletingHabitId(null)}
+        onCheckIn={completeToday}
         onRequestArchive={(habit) => {
           setDeletingHabitId(null);
           setArchivingHabitId(habit.id);
@@ -172,6 +201,7 @@ export function HabitDashboard(): JSX.Element {
         }}
         onSubmitEdit={submitHabit}
         onStatusChange={changeHabitStatus}
+        onUndoCheckIn={undoToday}
       />
     </section>
   );

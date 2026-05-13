@@ -1,11 +1,14 @@
 import type {
   AuthLogoutResponse,
   AuthMeResponse,
+  CheckInListResponse,
+  CheckInTodayResponse,
   CreateHabitRequest,
   DeleteHabitResponse,
   HabitListResponse,
   HabitResponse,
   HealthResponse,
+  UndoCheckInResponse,
   UpdateHabitRequest,
 } from '@habit-tracker/shared';
 
@@ -91,4 +94,33 @@ export async function deleteHabit(id: string): Promise<DeleteHabitResponse> {
   });
 
   return readJson<DeleteHabitResponse>(response, 'Unable to delete habit.');
+}
+
+export async function checkInToday(id: string): Promise<CheckInTodayResponse> {
+  const response = await fetch(`/api/habits/${id}/check-ins/today`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  return readJson<CheckInTodayResponse>(response, 'Unable to check in habit.');
+}
+
+export async function undoTodayCheckIn(id: string): Promise<UndoCheckInResponse> {
+  const response = await fetch(`/api/habits/${id}/check-ins/today`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  return readJson<UndoCheckInResponse>(response, 'Unable to undo check-in.');
+}
+
+export async function listCheckIns(
+  id: string,
+  month: string,
+): Promise<CheckInListResponse> {
+  const response = await fetch(`/api/habits/${id}/check-ins?month=${month}`, {
+    credentials: 'include',
+  });
+
+  return readJson<CheckInListResponse>(response, 'Unable to load check-ins.');
 }

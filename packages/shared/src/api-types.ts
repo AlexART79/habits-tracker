@@ -29,6 +29,10 @@ export type HabitResponse = {
   description: string | null;
   startDate: string;
   status: HabitStatus;
+  currentStreak: number;
+  bestStreak: number;
+  totalCheckIns: number;
+  completedToday: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -52,4 +56,25 @@ export type UpdateHabitRequest = {
 
 export type DeleteHabitResponse = {
   ok: true;
+};
+
+export type CheckInResponse = {
+  id: string;
+  habitId: string;
+  date: string;
+  createdAt: string;
+};
+
+export type CheckInListResponse = {
+  checkIns: CheckInResponse[];
+};
+
+export type CheckInTodayResponse = {
+  checkIn: CheckInResponse;
+  habit: HabitResponse;
+};
+
+export type UndoCheckInResponse = {
+  ok: true;
+  habit: HabitResponse;
 };

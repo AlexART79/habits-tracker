@@ -15,6 +15,8 @@ import type {
 import { HABIT_STATUSES } from '@habit-tracker/shared';
 import type { Habit } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { getTodayCalendarDate } from '../streaks/calendar-date';
+import { calculateStreakSummary } from '../streaks/streak-calculator';
 import type { CreateHabitDto } from './dto/create-habit.dto';
 import type { ListHabitsQueryDto } from './dto/list-habits-query.dto';
 import type { UpdateHabitDto } from './dto/update-habit.dto';
@@ -32,7 +34,7 @@ export class HabitsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return { habits: habits.map((habit) => this.toResponse(habit)) };
+    return { habits: await this.toResponses(habits) };
   }
 
   async create(userId: string, dto: CreateHabitDto): Promise<HabitResponse> {
@@ -90,7 +92,7 @@ export class HabitsService {
     return { ok: true };
   }
 
-  private async findOwnedHabitOrThrow(
+  async findOwnedHabitOrThrow(
     userId: string,
     habitId: string,
   ): Promise<Habit> {
@@ -144,13 +146,60 @@ export class HabitsService {
     }
   }
 
-  private toResponse(habit: Habit): HabitResponse {
+  private async toResponses(habits: Habit[]): Promise<HabitResponse[]> {
+    if (habits.length === 0) {
+      return [];
+    }
+
+    const firstHabit = habits[0];
+    if (!firstHabit) {
+      return [];
+    }
+
+    const checkIns = await this.prisma.checkIn.findMany({
+      where: {
+        userId: firstHabit.userId,
+        habitId: { in: habits.map((habit) => habit.id) },
+      },
+      orderBy: { date: 'asc' },
+    });
+    const datesByHabitId = new Map<string, string[]>();
+
+    for (const checkIn of checkIns) {
+      const dates = datesByHabitId.get(checkIn.habitId) ?? [];
+      dates.push(checkIn.date);
+      datesByHabitId.set(checkIn.habitId, dates);
+    }
+
+    return habits.map((habit) =>
+      this.toResponseFromDates(habit, datesByHabitId.get(habit.id) ?? []),
+    );
+  }
+
+  private async toResponse(habit: Habit): Promise<HabitResponse> {
+    const checkIns = await this.prisma.checkIn.findMany({
+      where: { userId: habit.userId, habitId: habit.id },
+      orderBy: { date: 'asc' },
+    });
+
+    return this.toResponseFromDates(
+      habit,
+      checkIns.map((checkIn) => checkIn.date),
+    );
+  }
+
+  private toResponseFromDates(habit: Habit, checkInDates: string[]): HabitResponse {
+    const today = getTodayCalendarDate();
+    const summary = calculateStreakSummary(checkInDates, today);
+
     return {
       id: habit.id,
       name: habit.name,
       description: habit.description,
       startDate: habit.startDate,
       status: habit.status as HabitStatus,
+      ...summary,
+      completedToday: checkInDates.includes(today),
       createdAt: habit.createdAt.toISOString(),
       updatedAt: habit.updatedAt.toISOString(),
     };

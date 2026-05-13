@@ -22,12 +22,14 @@ type HabitListProps = {
   onCancelArchive: () => void;
   onCancelDelete: () => void;
   onCancelEdit: () => void;
+  onCheckIn: (habit: HabitResponse) => Promise<void>;
   onDelete: (habit: HabitResponse) => Promise<void>;
   onEdit: (habit: HabitResponse) => void;
   onRequestArchive: (habit: HabitResponse) => void;
   onRequestDelete: (habit: HabitResponse) => void;
   onSubmitEdit: (request: CreateHabitRequest | UpdateHabitRequest) => Promise<void>;
   onStatusChange: (habit: HabitResponse, status: HabitStatus) => Promise<void>;
+  onUndoCheckIn: (habit: HabitResponse) => Promise<void>;
 };
 
 export function HabitList({
@@ -42,12 +44,14 @@ export function HabitList({
   onCancelArchive,
   onCancelDelete,
   onCancelEdit,
+  onCheckIn,
   onDelete,
   onEdit,
   onRequestArchive,
   onRequestDelete,
   onSubmitEdit,
   onStatusChange,
+  onUndoCheckIn,
 }: HabitListProps): JSX.Element {
   if (isLoading) {
     return (
@@ -93,11 +97,13 @@ export function HabitList({
               isMutating={isMutating}
               onCancelArchive={onCancelArchive}
               onCancelDelete={onCancelDelete}
+              onCheckIn={onCheckIn}
               onDelete={onDelete}
               onEdit={onEdit}
               onRequestArchive={onRequestArchive}
               onRequestDelete={onRequestDelete}
               onStatusChange={onStatusChange}
+              onUndoCheckIn={onUndoCheckIn}
             />
           )}
         </div>

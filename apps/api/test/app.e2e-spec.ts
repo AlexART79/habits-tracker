@@ -224,6 +224,19 @@ describe('App endpoints', () => {
       return response.body as { id: string; status: string };
     }
 
+    function today(): string {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: process.env.APP_TIMEZONE ?? 'UTC',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date());
+    }
+
+    function currentMonth(): string {
+      return today().slice(0, 7);
+    }
+
     it('requires authentication for habit routes', async () => {
       await request(app.getHttpServer()).get('/api/habits').expect(401);
       await request(app.getHttpServer())
@@ -368,6 +381,138 @@ describe('App endpoints', () => {
 
       const listResponse = await agent.get('/api/habits').expect(200);
       expect(listResponse.body.habits).toEqual([]);
+    });
+
+    it('creates today check-in and returns updated streak metrics', async () => {
+      const agent = await loginTestUser('check-in-user');
+      const habit = await createHabit(agent);
+
+      const response = await agent
+        .post(`/api/habits/${habit.id}/check-ins/today`)
+        .expect(201);
+
+      expect(response.body).toEqual({
+        checkIn: {
+          id: expect.any(String),
+          habitId: habit.id,
+          date: today(),
+          createdAt: expect.any(String),
+        },
+        habit: expect.objectContaining({
+          id: habit.id,
+          completedToday: true,
+          currentStreak: 1,
+          bestStreak: 1,
+          totalCheckIns: 1,
+        }),
+      });
+
+      const listResponse = await agent.get('/api/habits').expect(200);
+      expect(listResponse.body.habits[0]).toMatchObject({
+        id: habit.id,
+        completedToday: true,
+        currentStreak: 1,
+        bestStreak: 1,
+        totalCheckIns: 1,
+      });
+    });
+
+    it('prevents duplicate check-ins for the same habit and date', async () => {
+      const agent = await loginTestUser('duplicate-check-in-user');
+      const habit = await createHabit(agent);
+
+      await agent.post(`/api/habits/${habit.id}/check-ins/today`).expect(201);
+      await agent.post(`/api/habits/${habit.id}/check-ins/today`).expect(409);
+    });
+
+    it('rejects check-ins for paused and archived habits', async () => {
+      const agent = await loginTestUser('inactive-check-in-user');
+      const pausedHabit = await createHabit(agent, 'Paused habit');
+      const archivedHabit = await createHabit(agent, 'Archived habit');
+
+      await agent.patch(`/api/habits/${pausedHabit.id}`).send({ status: 'PAUSED' }).expect(200);
+      await agent
+        .patch(`/api/habits/${archivedHabit.id}`)
+        .send({ status: 'ARCHIVED' })
+        .expect(200);
+
+      await agent.post(`/api/habits/${pausedHabit.id}/check-ins/today`).expect(409);
+      await agent.post(`/api/habits/${archivedHabit.id}/check-ins/today`).expect(409);
+    });
+
+    it('blocks another user from check-in and undo operations', async () => {
+      const ownerAgent = await loginTestUser('check-in-owner');
+      const otherAgent = await loginTestUser('check-in-other');
+      const habit = await createHabit(ownerAgent);
+
+      await ownerAgent.post(`/api/habits/${habit.id}/check-ins/today`).expect(201);
+      await otherAgent.post(`/api/habits/${habit.id}/check-ins/today`).expect(403);
+      await otherAgent.delete(`/api/habits/${habit.id}/check-ins/today`).expect(403);
+    });
+
+    it('undoes today check-in and recalculates habit metrics', async () => {
+      const agent = await loginTestUser('undo-check-in-user');
+      const habit = await createHabit(agent);
+
+      await agent.post(`/api/habits/${habit.id}/check-ins/today`).expect(201);
+
+      const response = await agent
+        .delete(`/api/habits/${habit.id}/check-ins/today`)
+        .expect(200);
+
+      expect(response.body).toEqual({
+        ok: true,
+        habit: expect.objectContaining({
+          id: habit.id,
+          completedToday: false,
+          currentStreak: 0,
+          bestStreak: 0,
+          totalCheckIns: 0,
+        }),
+      });
+    });
+
+    it('returns current month check-in history for owned habits only', async () => {
+      const ownerAgent = await loginTestUser('history-owner');
+      const otherAgent = await loginTestUser('history-other');
+      const habit = await createHabit(ownerAgent);
+      const otherHabit = await createHabit(otherAgent);
+      const owner = await prisma.user.findFirstOrThrow({
+        where: { providerUserId: 'history-owner' },
+      });
+      const other = await prisma.user.findFirstOrThrow({
+        where: { providerUserId: 'history-other' },
+      });
+
+      await prisma.checkIn.create({
+        data: { habitId: habit.id, userId: owner.id, date: today() },
+      });
+      await prisma.checkIn.create({
+        data: { habitId: otherHabit.id, userId: other.id, date: today() },
+      });
+
+      const response = await ownerAgent
+        .get(`/api/habits/${habit.id}/check-ins?month=${currentMonth()}`)
+        .expect(200);
+
+      expect(response.body).toEqual({
+        checkIns: [
+          {
+            id: expect.any(String),
+            habitId: habit.id,
+            date: today(),
+            createdAt: expect.any(String),
+          },
+        ],
+      });
+      await otherAgent.get(`/api/habits/${habit.id}/check-ins?month=${currentMonth()}`).expect(403);
+    });
+
+    it('rejects invalid month history query values', async () => {
+      const agent = await loginTestUser('invalid-month-user');
+      const habit = await createHabit(agent);
+
+      await agent.get(`/api/habits/${habit.id}/check-ins?month=2026-5`).expect(400);
     });
   });
 });
