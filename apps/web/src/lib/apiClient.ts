@@ -1,7 +1,12 @@
 import type {
   AuthLogoutResponse,
   AuthMeResponse,
+  CreateHabitRequest,
+  DeleteHabitResponse,
+  HabitListResponse,
+  HabitResponse,
   HealthResponse,
+  UpdateHabitRequest,
 } from '@habit-tracker/shared';
 
 async function readJson<TResponse>(
@@ -42,4 +47,48 @@ export async function logout(): Promise<AuthLogoutResponse> {
   });
 
   return readJson<AuthLogoutResponse>(response, 'Logout failed.');
+}
+
+export async function listHabits(): Promise<HabitListResponse> {
+  const response = await fetch('/api/habits', {
+    credentials: 'include',
+  });
+
+  return readJson<HabitListResponse>(response, 'Unable to load habits.');
+}
+
+export async function createHabit(
+  request: CreateHabitRequest,
+): Promise<HabitResponse> {
+  const response = await fetch('/api/habits', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+
+  return readJson<HabitResponse>(response, 'Unable to create habit.');
+}
+
+export async function updateHabit(
+  id: string,
+  request: UpdateHabitRequest,
+): Promise<HabitResponse> {
+  const response = await fetch(`/api/habits/${id}`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+
+  return readJson<HabitResponse>(response, 'Unable to update habit.');
+}
+
+export async function deleteHabit(id: string): Promise<DeleteHabitResponse> {
+  const response = await fetch(`/api/habits/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  return readJson<DeleteHabitResponse>(response, 'Unable to delete habit.');
 }

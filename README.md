@@ -4,7 +4,7 @@ A full-stack TypeScript habit tracker for building routines, tracking daily chec
 
 ## Project Status
 
-Current status: Phase 1 authentication and user isolation foundation.
+Current status: Phase 2 habit CRUD.
 
 Implemented now:
 
@@ -16,8 +16,11 @@ Implemented now:
 - SSO-only auth entry screen with Google and GitHub routes
 - Server-owned cookie session with `GET /api/auth/me` and `POST /api/auth/logout`
 - Test/dev mock SSO login endpoint for automated tests and local debugging
+- Authenticated habit CRUD with owner-only access
+- Habit status transitions for Active, Paused, and Archived habits
+- React habit dashboard with loading, empty, error, validation, create, edit, status, and delete states
 
-Planned later phases add habit CRUD, check-ins, streak calculations, search/filter UI, and WebSocket milestone notifications.
+Planned later phases add check-ins, streak calculations, search/filter UI, and WebSocket milestone notifications.
 
 ## Stack
 
@@ -205,22 +208,62 @@ GET    /api/auth/github/callback
 GET    /api/auth/me
 POST   /api/auth/logout
 POST   /api/auth/test-login
-```
-
-Planned API surface:
-
-```text
 GET    /api/habits
 POST   /api/habits
 GET    /api/habits/:id
 PATCH  /api/habits/:id
 DELETE /api/habits/:id
+```
+
+Planned API surface:
+
+```text
 POST   /api/habits/:habitId/check-ins/today
 DELETE /api/habits/:habitId/check-ins/today
 GET    /api/habits/:habitId/check-ins?month=YYYY-MM
 ```
 
 All habit, check-in, and notification operations must be scoped to the authenticated user. The backend must never trust a client-provided `userId`.
+
+### Habit API
+
+Habit request fields:
+
+```json
+{
+  "name": "Read daily",
+  "description": "Read for twenty minutes",
+  "startDate": "2026-05-13"
+}
+```
+
+`name` is required, trimmed, and limited to 120 characters. `description` is optional and limited to 500 characters. `startDate` must be a `YYYY-MM-DD` calendar date. `PATCH /api/habits/:id` accepts any subset of `name`, `description`, `startDate`, and `status`.
+
+Habit responses include:
+
+```json
+{
+  "id": "habit-id",
+  "name": "Read daily",
+  "description": "Read for twenty minutes",
+  "startDate": "2026-05-13",
+  "status": "ACTIVE",
+  "createdAt": "2026-05-13T12:00:00.000Z",
+  "updatedAt": "2026-05-13T12:00:00.000Z"
+}
+```
+
+`GET /api/habits` returns `{ "habits": [...] }` ordered newest first.
+
+### Habit Status Rules
+
+Supported statuses are `ACTIVE`, `PAUSED`, and `ARCHIVED`.
+
+- `ACTIVE` habits can be paused or archived.
+- `PAUSED` habits can be resumed or archived.
+- `ARCHIVED` habits are read-only; normal edits return `409 Conflict`.
+- `DELETE /api/habits/:id` remains allowed for archived habits.
+- Cross-account read, edit, and delete attempts return `403 Forbidden` when the habit exists but belongs to another user.
 
 ## WebSocket Message Format
 
@@ -292,7 +335,7 @@ The backend owns the definition of today. Check-in dates are stored as `YYYY-MM-
 
 ## Habit Deletion Behavior
 
-The planned MVP behavior is hard delete. Deleting a habit cascades to its check-in history and milestone notifications.
+The MVP behavior is hard delete. Deleting a habit removes the habit and cascades to its check-in history and milestone notifications through Prisma relations.
 
 ## Docker
 

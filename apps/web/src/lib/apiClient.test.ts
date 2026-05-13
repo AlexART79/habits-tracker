@@ -1,11 +1,21 @@
 import type {
   AuthLogoutResponse,
   AuthMeResponse,
+  HabitListResponse,
+  HabitResponse,
   HealthResponse,
 } from '@habit-tracker/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getCurrentUser, getHealth, logout } from './apiClient';
+import {
+  createHabit,
+  deleteHabit,
+  getCurrentUser,
+  getHealth,
+  listHabits,
+  logout,
+  updateHabit,
+} from './apiClient';
 
 const mockFetch = vi.fn<typeof fetch>();
 
@@ -85,5 +95,99 @@ describe('logout', () => {
       method: 'POST',
       credentials: 'include',
     });
+  });
+});
+
+describe('habit API', () => {
+  const habitResponse: HabitResponse = {
+    id: 'habit-1',
+    name: 'Read daily',
+    description: 'Read for twenty minutes',
+    startDate: '2026-05-13',
+    status: 'ACTIVE',
+    createdAt: '2026-05-13T12:00:00.000Z',
+    updatedAt: '2026-05-13T12:00:00.000Z',
+  };
+
+  it('lists habits with cookies included', async () => {
+    const response: HabitListResponse = { habits: [habitResponse] };
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(listHabits()).resolves.toEqual(response);
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits', {
+      credentials: 'include',
+    });
+  });
+
+  it('creates a habit with JSON body and cookies included', async () => {
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(habitResponse), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(
+      createHabit({
+        name: 'Read daily',
+        description: 'Read for twenty minutes',
+        startDate: '2026-05-13',
+      }),
+    ).resolves.toEqual(habitResponse);
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Read daily',
+        description: 'Read for twenty minutes',
+        startDate: '2026-05-13',
+      }),
+    });
+  });
+
+  it('updates a habit with JSON body and cookies included', async () => {
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify({ ...habitResponse, status: 'PAUSED' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(updateHabit('habit-1', { status: 'PAUSED' })).resolves.toMatchObject({
+      status: 'PAUSED',
+    });
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits/habit-1', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'PAUSED' }),
+    });
+  });
+
+  it('deletes a habit with cookies included', async () => {
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(deleteHabit('habit-1')).resolves.toEqual({ ok: true });
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits/habit-1', {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+  });
+
+  it('surfaces a visible habit API error message', async () => {
+    mockFetch.mockResolvedValue(new Response(null, { status: 500 }));
+
+    await expect(listHabits()).rejects.toThrow('Unable to load habits.');
   });
 });

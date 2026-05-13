@@ -182,4 +182,192 @@ describe('App endpoints', () => {
       }
     });
   });
+
+  describe('habit endpoints', () => {
+    beforeEach(async () => {
+      await cleanDatabase(prisma);
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(prisma);
+    });
+
+    async function loginTestUser(providerUserId: string) {
+      const agent = request.agent(app.getHttpServer());
+      await agent
+        .post('/api/auth/test-login')
+        .send({
+          provider: 'test',
+          providerUserId,
+          email: `${providerUserId}@example.com`,
+          displayName: providerUserId,
+          avatarUrl: null,
+        })
+        .expect(201);
+
+      return agent;
+    }
+
+    async function createHabit(
+      agent: ReturnType<typeof request.agent>,
+      name = 'Read daily',
+    ) {
+      const response = await agent
+        .post('/api/habits')
+        .send({
+          name,
+          description: 'Read for twenty minutes',
+          startDate: '2026-05-13',
+        })
+        .expect(201);
+
+      return response.body as { id: string; status: string };
+    }
+
+    it('requires authentication for habit routes', async () => {
+      await request(app.getHttpServer()).get('/api/habits').expect(401);
+      await request(app.getHttpServer())
+        .post('/api/habits')
+        .send({ name: 'Read', startDate: '2026-05-13' })
+        .expect(401);
+    });
+
+    it('creates a valid habit for the authenticated user', async () => {
+      const agent = await loginTestUser('habit-user-1');
+
+      const response = await agent
+        .post('/api/habits')
+        .send({
+          name: '  Read daily  ',
+          description: '  Read for twenty minutes  ',
+          startDate: '2026-05-13',
+        })
+        .expect(201);
+
+      expect(response.body).toMatchObject({
+        id: expect.any(String),
+        name: 'Read daily',
+        description: 'Read for twenty minutes',
+        startDate: '2026-05-13',
+        status: 'ACTIVE',
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+      });
+      expect(response.body).not.toHaveProperty('userId');
+    });
+
+    it('rejects invalid habit create payloads', async () => {
+      const agent = await loginTestUser('habit-user-2');
+
+      await agent
+        .post('/api/habits')
+        .send({ name: '   ', startDate: '2026-05-13' })
+        .expect(400);
+      await agent
+        .post('/api/habits')
+        .send({ name: 'Read', startDate: '2026-05-13', status: 'DONE' })
+        .expect(400);
+      await agent
+        .post('/api/habits')
+        .send({
+          name: 'Read',
+          startDate: '2026-05-13',
+          userId: 'client-user',
+        })
+        .expect(400);
+    });
+
+    it('lists and reads only the authenticated user habits', async () => {
+      const firstAgent = await loginTestUser('habit-owner');
+      const secondAgent = await loginTestUser('habit-other');
+      const firstHabit = await createHabit(firstAgent, 'Owner habit');
+      await createHabit(secondAgent, 'Other habit');
+
+      const listResponse = await firstAgent.get('/api/habits').expect(200);
+      expect(listResponse.body.habits).toHaveLength(1);
+      expect(listResponse.body.habits[0]).toMatchObject({
+        id: firstHabit.id,
+        name: 'Owner habit',
+      });
+
+      const readResponse = await firstAgent
+        .get(`/api/habits/${firstHabit.id}`)
+        .expect(200);
+      expect(readResponse.body).toMatchObject({
+        id: firstHabit.id,
+        name: 'Owner habit',
+      });
+    });
+
+    it('blocks cross-user read and edit access', async () => {
+      const ownerAgent = await loginTestUser('cross-owner');
+      const otherAgent = await loginTestUser('cross-other');
+      const habit = await createHabit(ownerAgent);
+
+      await otherAgent.get(`/api/habits/${habit.id}`).expect(403);
+      await otherAgent
+        .patch(`/api/habits/${habit.id}`)
+        .send({ name: 'Stolen edit' })
+        .expect(403);
+    });
+
+    it('updates habit fields and allowed status transitions', async () => {
+      const agent = await loginTestUser('habit-status-user');
+      const habit = await createHabit(agent);
+
+      const paused = await agent
+        .patch(`/api/habits/${habit.id}`)
+        .send({
+          name: 'Read intentionally',
+          description: null,
+          startDate: '2026-05-14',
+          status: 'PAUSED',
+        })
+        .expect(200);
+      expect(paused.body).toMatchObject({
+        name: 'Read intentionally',
+        description: null,
+        startDate: '2026-05-14',
+        status: 'PAUSED',
+      });
+
+      const active = await agent
+        .patch(`/api/habits/${habit.id}`)
+        .send({ status: 'ACTIVE' })
+        .expect(200);
+      expect(active.body.status).toBe('ACTIVE');
+
+      const archived = await agent
+        .patch(`/api/habits/${habit.id}`)
+        .send({ status: 'ARCHIVED' })
+        .expect(200);
+      expect(archived.body.status).toBe('ARCHIVED');
+    });
+
+    it('treats archived habits as read-only except delete', async () => {
+      const agent = await loginTestUser('habit-archived-user');
+      const habit = await createHabit(agent);
+
+      await agent
+        .patch(`/api/habits/${habit.id}`)
+        .send({ status: 'ARCHIVED' })
+        .expect(200);
+      await agent
+        .patch(`/api/habits/${habit.id}`)
+        .send({ name: 'Cannot edit' })
+        .expect(409);
+      await agent.delete(`/api/habits/${habit.id}`).expect(200, { ok: true });
+    });
+
+    it('deletes an owned habit', async () => {
+      const agent = await loginTestUser('habit-delete-user');
+      const habit = await createHabit(agent);
+
+      await agent.delete(`/api/habits/${habit.id}`).expect(200, { ok: true });
+      await agent.get(`/api/habits/${habit.id}`).expect(404);
+
+      const listResponse = await agent.get('/api/habits').expect(200);
+      expect(listResponse.body.habits).toEqual([]);
+    });
+  });
 });

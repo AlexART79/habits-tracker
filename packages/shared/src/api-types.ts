@@ -1,4 +1,4 @@
-import type { AuthProvider } from './constants.js';
+import type { AuthProvider, HabitStatus } from './constants.js';
 
 export type HealthResponse = {
   status: 'ok';
@@ -20,5 +20,36 @@ export type AuthMeResponse = {
 };
 
 export type AuthLogoutResponse = {
+  ok: true;
+};
+
+export type HabitResponse = {
+  id: string;
+  name: string;
+  description: string | null;
+  startDate: string;
+  status: HabitStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HabitListResponse = {
+  habits: HabitResponse[];
+};
+
+export type CreateHabitRequest = {
+  name: string;
+  description?: string | null;
+  startDate: string;
+};
+
+export type UpdateHabitRequest = {
+  name?: string;
+  description?: string | null;
+  startDate?: string;
+  status?: HabitStatus;
+};
+
+export type DeleteHabitResponse = {
   ok: true;
 };

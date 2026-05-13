@@ -10,6 +10,9 @@ import {
 describe('shared constants', () => {
   it('centralizes habit statuses and milestone values', () => {
     expect(HABIT_STATUSES).toEqual(['ACTIVE', 'PAUSED', 'ARCHIVED']);
+    expect(new Set(HABIT_STATUSES).has('ACTIVE')).toBe(true);
+    expect(new Set(HABIT_STATUSES).has('PAUSED')).toBe(true);
+    expect(new Set(HABIT_STATUSES).has('ARCHIVED')).toBe(true);
     expect(MILESTONE_DAYS).toEqual([3, 7, 30]);
   });
 

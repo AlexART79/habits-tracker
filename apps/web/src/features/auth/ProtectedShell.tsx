@@ -1,6 +1,5 @@
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { Input } from '../../components/Input';
+import { HabitDashboard } from '../habits/HabitDashboard';
 import { useAuth } from './AuthProvider';
 
 export function ProtectedShell(): JSX.Element {
@@ -31,19 +30,7 @@ export function ProtectedShell(): JSX.Element {
         </p>
       ) : null}
 
-      <Card
-        className="grid items-end gap-4 p-5 md:grid-cols-[1fr_auto]"
-        aria-label="Habit controls"
-      >
-        <Input
-          id="habit-search"
-          type="search"
-          label="Search habits"
-          placeholder="Search by name"
-          disabled
-        />
-        <Button disabled>Create first habit</Button>
-      </Card>
+      <HabitDashboard />
     </main>
   );
 }
