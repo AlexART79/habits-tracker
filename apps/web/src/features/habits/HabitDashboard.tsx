@@ -125,10 +125,9 @@ export function HabitDashboard(): JSX.Element {
         <StatTile icon={Archive} label="Archived" value={archivedCount} />
       </div>
 
-      {formState ? (
+      {formState?.mode === 'create' ? (
         <HabitForm
-          mode={formState.mode}
-          habit={formState.mode === 'edit' ? formState.habit : undefined}
+          mode="create"
           isSaving={isMutating}
           serverError={formError}
           onCancel={() => {
@@ -145,6 +144,12 @@ export function HabitDashboard(): JSX.Element {
         habits={habits}
         isLoading={isLoading}
         isMutating={isMutating}
+        editingHabit={formState?.mode === 'edit' ? formState.habit : null}
+        editErrorMessage={formState?.mode === 'edit' ? formError : null}
+        onCancelEdit={() => {
+          setFormState(null);
+          setFormError(null);
+        }}
         onDelete={confirmDelete}
         onEdit={(habit) => {
           setDeletingHabitId(null);
@@ -153,6 +158,7 @@ export function HabitDashboard(): JSX.Element {
         }}
         onCancelDelete={() => setDeletingHabitId(null)}
         onRequestDelete={(habit) => setDeletingHabitId(habit.id)}
+        onSubmitEdit={submitHabit}
         onStatusChange={changeHabitStatus}
       />
     </section>

@@ -213,13 +213,19 @@ describe('App', () => {
     expect(await screen.findByText('Read daily')).toBeInTheDocument();
   });
 
-  it('edits a habit and refreshes the list', async () => {
+  it('edits a habit inline and refreshes the list', async () => {
+    const secondHabit = {
+      ...activeHabit,
+      id: 'habit-2',
+      name: 'Walk outside',
+      description: 'Ten minute walk',
+    };
     const updatedHabit = { ...activeHabit, name: 'Read deeply' };
     mockFetch
       .mockResolvedValueOnce(jsonResponse(authResponse))
-      .mockResolvedValueOnce(jsonResponse({ habits: [activeHabit] }))
+      .mockResolvedValueOnce(jsonResponse({ habits: [activeHabit, secondHabit] }))
       .mockResolvedValueOnce(jsonResponse(updatedHabit))
-      .mockResolvedValueOnce(jsonResponse({ habits: [updatedHabit] }));
+      .mockResolvedValueOnce(jsonResponse({ habits: [updatedHabit, secondHabit] }));
 
     const user = userEvent.setup();
     render(<App />);
@@ -228,6 +234,16 @@ describe('App', () => {
     expect(editButton).not.toHaveTextContent('Edit');
 
     await user.click(editButton);
+    const habitList = screen.getByRole('list', { name: 'Habit list' });
+    const editForm = screen.getByRole('form', { name: 'Edit habit form' });
+    const secondHabitHeading = screen.getByRole('heading', { name: 'Walk outside' });
+
+    expect(habitList).toContainElement(editForm);
+    expect(screen.queryByRole('heading', { name: 'Read daily' })).not.toBeInTheDocument();
+    expect(
+      editForm.compareDocumentPosition(secondHabitHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
     await user.clear(screen.getByLabelText('Habit name'));
     await user.type(screen.getByLabelText('Habit name'), 'Read deeply');
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
