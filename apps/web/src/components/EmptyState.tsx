@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { COMPONENT_CLASSES } from './componentStyles';
 
 type EmptyStateProps = {
   icon: LucideIcon;
@@ -13,8 +14,8 @@ export function EmptyState({
   title,
 }: EmptyStateProps): JSX.Element {
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-white/80 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-      <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-200">
+    <div className={COMPONENT_CLASSES.emptyState}>
+      <div className={COMPONENT_CLASSES.emptyStateIcon}>
         <Icon className="h-5 w-5" aria-hidden="true" />
       </div>
       <h2 className="text-xl font-bold text-slate-950 dark:text-white">

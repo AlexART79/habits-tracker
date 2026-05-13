@@ -1,9 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react';
 import type { CreateHabitRequest, HabitResponse, UpdateHabitRequest } from '@habit-tracker/shared';
 import { Save, X } from 'lucide-react';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+import { HABIT_ARIA, HABIT_COPY, HABIT_LIMITS } from './habitConstants';
+import { useHabitForm } from './useHabitForm';
 
 type HabitFormMode = 'create' | 'edit';
 
@@ -16,10 +17,6 @@ type HabitFormProps = {
   onSubmit: (request: CreateHabitRequest | UpdateHabitRequest) => Promise<void>;
 };
 
-function getTodayDate(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function HabitForm({
   habit,
   isSaving,
@@ -28,62 +25,36 @@ export function HabitForm({
   onSubmit,
   serverError,
 }: HabitFormProps): JSX.Element {
-  const [name, setName] = useState(habit?.name ?? '');
-  const [description, setDescription] = useState(habit?.description ?? '');
-  const [startDate, setStartDate] = useState(habit?.startDate ?? getTodayDate());
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setName(habit?.name ?? '');
-    setDescription(habit?.description ?? '');
-    setStartDate(habit?.startDate ?? getTodayDate());
-    setValidationError(null);
-  }, [habit]);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
-    event.preventDefault();
-
-    if (!name.trim()) {
-      setValidationError('Name is required.');
-      return;
-    }
-
-    setValidationError(null);
-    await onSubmit({
-      name: name.trim(),
-      description: description.trim() || null,
-      startDate,
-    });
-  }
+  const form = useHabitForm({ habit, onSubmit });
 
   return (
     <form
-      aria-label={mode === 'create' ? 'Create habit form' : 'Edit habit form'}
+      aria-label={mode === 'create' ? HABIT_ARIA.createForm : HABIT_ARIA.editForm}
       className="grid gap-4 rounded-lg border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/75"
-      onSubmit={(event) => void handleSubmit(event)}
+      onSubmit={(event) => void form.handleSubmit(event)}
     >
       <div className="grid gap-4 md:grid-cols-2">
         <Input
-          label="Habit name"
+          label={HABIT_COPY.habitName}
           name="habit-name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
+          value={form.name}
+          onChange={(event) => form.setName(event.target.value)}
           disabled={isSaving}
-          maxLength={120}
+          maxLength={HABIT_LIMITS.nameMaxLength}
         />
         <Input
-          label="Start date"
+          label={HABIT_COPY.startDate}
           name="habit-start-date"
           type="date"
-          value={startDate}
-          onChange={(event) => setStartDate(event.target.value)}
+          value={form.startDate}
+          onChange={(event) => form.setStartDate(event.target.value)}
           disabled={isSaving}
         />
       </div>
 
       <div className="grid gap-1.5">
         <label className="font-bold text-slate-800 dark:text-slate-200" htmlFor="habit-description">
-          Description
+          {HABIT_COPY.description}
         </label>
         <textarea
           id="habit-description"
@@ -95,25 +66,25 @@ export function HabitForm({
             'disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 disabled:opacity-70',
             'dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:border-slate-600 dark:disabled:bg-slate-800',
           ].join(' ')}
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          value={form.description}
+          onChange={(event) => form.setDescription(event.target.value)}
           disabled={isSaving}
-          maxLength={500}
+          maxLength={HABIT_LIMITS.descriptionMaxLength}
         />
       </div>
 
-      {validationError ?? serverError ? (
-        <Alert>{validationError ?? serverError}</Alert>
+      {form.validationError ?? serverError ? (
+        <Alert>{form.validationError ?? serverError}</Alert>
       ) : null}
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={isSaving}>
           <Save className="h-4 w-4" aria-hidden="true" />
-          {mode === 'create' ? 'Save habit' : 'Save changes'}
+          {mode === 'create' ? HABIT_COPY.saveHabit : HABIT_COPY.saveChanges}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel} disabled={isSaving}>
           <X className="h-4 w-4" aria-hidden="true" />
-          Cancel
+          {HABIT_COPY.cancel}
         </Button>
       </div>
     </form>

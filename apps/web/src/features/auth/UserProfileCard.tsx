@@ -1,19 +1,9 @@
 import type { AuthUserResponse } from '@habit-tracker/shared';
+import { getInitials } from './authUtils';
 
 type UserProfileCardProps = {
   user: AuthUserResponse | null;
 };
-
-function getInitials(displayName?: string): string {
-  return (
-    displayName
-      ?.split(' ')
-      .map((part) => part[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase() || 'U'
-  );
-}
 
 export function UserProfileCard({ user }: UserProfileCardProps): JSX.Element {
   return (

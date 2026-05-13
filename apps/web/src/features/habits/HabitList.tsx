@@ -4,11 +4,12 @@ import type {
   HabitStatus,
   UpdateHabitRequest,
 } from '@habit-tracker/shared';
-import { ListPlus } from 'lucide-react';
 import { Alert } from '../../components/Alert';
-import { EmptyState } from '../../components/EmptyState';
 import { HabitCard } from './HabitCard';
 import { HabitForm } from './HabitForm';
+import { HABIT_ARIA } from './habitConstants';
+import { HabitListEmptyState } from './HabitListEmptyState';
+import { HabitListLoadingState } from './HabitListLoadingState';
 
 type HabitListProps = {
   archivingHabitId: string | null;
@@ -56,14 +57,7 @@ export function HabitList({
   onUndoCheckIn,
 }: HabitListProps): JSX.Element {
   if (isLoading) {
-    return (
-      <p
-        role="status"
-        className="rounded-lg border border-slate-200 bg-white/80 px-4 py-3 font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-200"
-      >
-        Loading habits...
-      </p>
-    );
+    return <HabitListLoadingState />;
   }
 
   if (errorMessage) {
@@ -71,23 +65,11 @@ export function HabitList({
   }
 
   if (habits.length === 0) {
-    if (hasActiveFilters) {
-      return (
-        <EmptyState icon={ListPlus} title="No habits match your filters.">
-          Try a different search term or clear filters to see every habit.
-        </EmptyState>
-      );
-    }
-
-    return (
-      <EmptyState icon={ListPlus} title="No habits yet.">
-        Create your first habit to start tracking progress.
-      </EmptyState>
-    );
+    return <HabitListEmptyState hasActiveFilters={hasActiveFilters} />;
   }
 
   return (
-    <div className="grid gap-4" role="list" aria-label="Habit list">
+    <div className="grid gap-4" role="list" aria-label={HABIT_ARIA.list}>
       {habits.map((habit) => (
         <div key={habit.id} role="listitem">
           {editingHabit?.id === habit.id ? (

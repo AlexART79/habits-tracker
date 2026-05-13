@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { AuthProvider, useAuth } from './AuthProvider';
+import { AuthProvider } from './AuthProvider';
+import { useAuth } from './useAuth';
 
 const { mockGetCurrentUser, mockLogout } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn<() => Promise<AuthMeResponse>>(),

@@ -1,5 +1,6 @@
 import { AlertCircle } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { COMPONENT_CLASSES } from './componentStyles';
 
 type AlertProps = {
   children: ReactNode;
@@ -11,8 +12,7 @@ export function Alert({ children, className = '' }: AlertProps): JSX.Element {
     <p
       role="alert"
       className={[
-        'inline-flex items-start gap-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 font-medium text-red-800',
-        'dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200',
+        COMPONENT_CLASSES.alert,
         className,
       ].join(' ')}
     >

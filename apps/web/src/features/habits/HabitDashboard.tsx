@@ -1,285 +1,60 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type {
-  CreateHabitRequest,
-  HabitResponse,
-  HabitStatus,
-  ListHabitsRequest,
-  UpdateHabitRequest,
-} from '@habit-tracker/shared';
-import { Activity, Archive, CirclePause, CirclePlus, ListChecks } from 'lucide-react';
-import { Button } from '../../components/Button';
-import { StatTile } from '../../components/StatTile';
-import {
-  checkInToday,
-  createHabit,
-  deleteHabit,
-  listHabits,
-  undoTodayCheckIn,
-  updateHabit,
-} from '../../lib/apiClient';
-import {
-  HabitFilters,
-  type CompletedTodayFilter,
-  type HabitStatusFilter,
-} from './HabitFilters';
-import { HabitForm } from './HabitForm';
+import { HABIT_COPY } from './habitConstants';
+import { HabitCreateFormSection } from './HabitCreateFormSection';
+import { HabitDashboardHeader } from './HabitDashboardHeader';
+import { HabitFilters } from './HabitFilters';
 import { HabitList } from './HabitList';
-
-type FormState =
-  | { mode: 'create'; habit?: undefined }
-  | { mode: 'edit'; habit: HabitResponse }
-  | null;
+import { HabitStatsBar } from './HabitStatsBar';
+import { useHabitDashboard } from './useHabitDashboard';
 
 export function HabitDashboard(): JSX.Element {
-  const [habits, setHabits] = useState<HabitResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMutating, setIsMutating] = useState(false);
-  const [listError, setListError] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [formState, setFormState] = useState<FormState>(null);
-  const [archivingHabitId, setArchivingHabitId] = useState<string | null>(null);
-  const [deletingHabitId, setDeletingHabitId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<HabitStatusFilter>('');
-  const [completedTodayFilter, setCompletedTodayFilter] =
-    useState<CompletedTodayFilter>('');
-  const listRequestId = useRef(0);
-
-  useEffect(() => {
-    const debounceId = window.setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 300);
-
-    return () => window.clearTimeout(debounceId);
-  }, [search]);
-
-  const habitFilters = useMemo<ListHabitsRequest>(() => {
-    const filters: ListHabitsRequest = {};
-    const trimmedSearch = debouncedSearch.trim();
-
-    if (trimmedSearch) {
-      filters.search = trimmedSearch;
-    }
-
-    if (statusFilter) {
-      filters.status = statusFilter;
-    }
-
-    if (completedTodayFilter) {
-      filters.completedToday = completedTodayFilter === 'true';
-    }
-
-    return filters;
-  }, [completedTodayFilter, debouncedSearch, statusFilter]);
-
-  const hasActiveFilters =
-    search.trim() !== '' || statusFilter !== '' || completedTodayFilter !== '';
-
-  const loadHabits = useCallback(async () => {
-    const requestId = listRequestId.current + 1;
-    listRequestId.current = requestId;
-    setIsLoading(true);
-    setListError(null);
-    try {
-      const response = await listHabits(habitFilters);
-
-      if (requestId === listRequestId.current) {
-        setHabits(response.habits);
-      }
-    } catch (error) {
-      if (requestId === listRequestId.current) {
-        setListError(error instanceof Error ? error.message : 'Unable to load habits.');
-      }
-    } finally {
-      if (requestId === listRequestId.current) {
-        setIsLoading(false);
-      }
-    }
-  }, [habitFilters]);
-
-  useEffect(() => {
-    void loadHabits();
-  }, [loadHabits]);
-
-  async function submitHabit(request: CreateHabitRequest | UpdateHabitRequest): Promise<void> {
-    setIsMutating(true);
-    setFormError(null);
-    try {
-      if (formState?.mode === 'edit') {
-        await updateHabit(formState.habit.id, request);
-      } else {
-        await createHabit(request as CreateHabitRequest);
-      }
-      setFormState(null);
-      await loadHabits();
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Unable to save habit.');
-    } finally {
-      setIsMutating(false);
-    }
-  }
-
-  async function changeHabitStatus(
-    habit: HabitResponse,
-    status: HabitStatus,
-  ): Promise<void> {
-    setIsMutating(true);
-    setListError(null);
-    try {
-      await updateHabit(habit.id, { status });
-      setArchivingHabitId(null);
-      await loadHabits();
-    } catch (error) {
-      setListError(error instanceof Error ? error.message : 'Unable to update habit.');
-    } finally {
-      setIsMutating(false);
-    }
-  }
-
-  async function confirmDelete(habit: HabitResponse): Promise<void> {
-    setIsMutating(true);
-    setListError(null);
-    try {
-      await deleteHabit(habit.id);
-      setDeletingHabitId(null);
-      await loadHabits();
-    } catch (error) {
-      setListError(error instanceof Error ? error.message : 'Unable to delete habit.');
-    } finally {
-      setIsMutating(false);
-    }
-  }
-
-  async function completeToday(habit: HabitResponse): Promise<void> {
-    setIsMutating(true);
-    setListError(null);
-    try {
-      await checkInToday(habit.id);
-      await loadHabits();
-    } catch (error) {
-      setListError(error instanceof Error ? error.message : 'Unable to check in habit.');
-    } finally {
-      setIsMutating(false);
-    }
-  }
-
-  async function undoToday(habit: HabitResponse): Promise<void> {
-    setIsMutating(true);
-    setListError(null);
-    try {
-      await undoTodayCheckIn(habit.id);
-      await loadHabits();
-    } catch (error) {
-      setListError(error instanceof Error ? error.message : 'Unable to undo check-in.');
-    } finally {
-      setIsMutating(false);
-    }
-  }
-
-  const activeCount = habits.filter((habit) => habit.status === 'ACTIVE').length;
-  const pausedCount = habits.filter((habit) => habit.status === 'PAUSED').length;
-  const archivedCount = habits.filter((habit) => habit.status === 'ARCHIVED').length;
-
-  function changeStatusFilter(value: HabitStatusFilter): void {
-    setStatusFilter(value);
-
-    if (value === 'PAUSED' || value === 'ARCHIVED') {
-      setCompletedTodayFilter('');
-    }
-  }
-
-  function clearFilters(): void {
-    setSearch('');
-    setDebouncedSearch('');
-    setStatusFilter('');
-    setCompletedTodayFilter('');
-  }
+  const dashboard = useHabitDashboard();
 
   return (
-    <section className="grid gap-5" aria-label="Habit dashboard">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Today
-          </p>
-          <h2 className="text-3xl font-bold text-slate-950 dark:text-white">Your habits</h2>
-          <p className="mt-1 text-slate-700 dark:text-slate-300">
-            Create, review, and tune the routines you are tracking.
-          </p>
-        </div>
-        <Button type="button" onClick={() => setFormState({ mode: 'create' })}>
-          <CirclePlus className="h-4 w-4" aria-hidden="true" />
-          Create habit
-        </Button>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile icon={ListChecks} label="Total habits" value={habits.length} />
-        <StatTile icon={Activity} label="Active" value={activeCount} />
-        <StatTile icon={CirclePause} label="Paused" value={pausedCount} />
-        <StatTile icon={Archive} label="Archived" value={archivedCount} />
-      </div>
+    <section className="grid gap-5" aria-label={HABIT_COPY.dashboardAriaLabel}>
+      <HabitDashboardHeader onCreate={dashboard.startCreate} />
+      <HabitStatsBar stats={dashboard.stats} />
 
       <HabitFilters
-        completedToday={completedTodayFilter}
-        hasActiveFilters={hasActiveFilters}
-        search={search}
-        status={statusFilter}
-        onClear={clearFilters}
-        onCompletedTodayChange={setCompletedTodayFilter}
-        onSearchChange={setSearch}
-        onStatusChange={changeStatusFilter}
+        completedToday={dashboard.filterState.completedToday}
+        hasActiveFilters={dashboard.filterState.hasActiveFilters}
+        search={dashboard.filterState.search}
+        status={dashboard.filterState.status}
+        todayFilterDisabled={dashboard.filterState.todayFilterDisabled}
+        onClear={dashboard.filterState.clearFilters}
+        onCompletedTodayChange={dashboard.filterState.setCompletedToday}
+        onSearchChange={dashboard.filterState.setSearch}
+        onStatusChange={dashboard.filterState.changeStatus}
       />
 
-      {formState?.mode === 'create' ? (
-        <HabitForm
-          mode="create"
-          isSaving={isMutating}
-          serverError={formError}
-          onCancel={() => {
-            setFormState(null);
-            setFormError(null);
-          }}
-          onSubmit={submitHabit}
-        />
-      ) : null}
+      <HabitCreateFormSection
+        formError={dashboard.formError}
+        formState={dashboard.formState}
+        isSaving={dashboard.isMutating}
+        onCancel={dashboard.cancelForm}
+        onSubmit={dashboard.submitHabit}
+      />
 
       <HabitList
-        archivingHabitId={archivingHabitId}
-        deletingHabitId={deletingHabitId}
-        errorMessage={listError}
-        hasActiveFilters={hasActiveFilters}
-        habits={habits}
-        isLoading={isLoading}
-        isMutating={isMutating}
-        editingHabit={formState?.mode === 'edit' ? formState.habit : null}
-        editErrorMessage={formState?.mode === 'edit' ? formError : null}
-        onCancelEdit={() => {
-          setFormState(null);
-          setFormError(null);
-        }}
-        onCancelArchive={() => setArchivingHabitId(null)}
-        onDelete={confirmDelete}
-        onEdit={(habit) => {
-          setArchivingHabitId(null);
-          setDeletingHabitId(null);
-          setFormError(null);
-          setFormState({ mode: 'edit', habit });
-        }}
-        onCancelDelete={() => setDeletingHabitId(null)}
-        onCheckIn={completeToday}
-        onRequestArchive={(habit) => {
-          setDeletingHabitId(null);
-          setArchivingHabitId(habit.id);
-        }}
-        onRequestDelete={(habit) => {
-          setArchivingHabitId(null);
-          setDeletingHabitId(habit.id);
-        }}
-        onSubmitEdit={submitHabit}
-        onStatusChange={changeHabitStatus}
-        onUndoCheckIn={undoToday}
+        archivingHabitId={dashboard.archivingHabitId}
+        deletingHabitId={dashboard.deletingHabitId}
+        errorMessage={dashboard.listError}
+        hasActiveFilters={dashboard.filterState.hasActiveFilters}
+        habits={dashboard.habits}
+        isLoading={dashboard.isLoading}
+        isMutating={dashboard.isMutating}
+        editingHabit={dashboard.formState?.mode === 'edit' ? dashboard.formState.habit : null}
+        editErrorMessage={dashboard.formState?.mode === 'edit' ? dashboard.formError : null}
+        onCancelEdit={dashboard.cancelForm}
+        onCancelArchive={() => dashboard.setArchivingHabitId(null)}
+        onDelete={dashboard.confirmDelete}
+        onEdit={dashboard.startEdit}
+        onCancelDelete={() => dashboard.setDeletingHabitId(null)}
+        onCheckIn={dashboard.completeToday}
+        onRequestArchive={dashboard.requestArchive}
+        onRequestDelete={dashboard.requestDelete}
+        onSubmitEdit={dashboard.submitHabit}
+        onStatusChange={dashboard.changeHabitStatus}
+        onUndoCheckIn={dashboard.undoToday}
       />
     </section>
   );

@@ -1,16 +1,19 @@
-import type { HabitStatus } from '@habit-tracker/shared';
 import { Filter, Search, X } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
-
-export type CompletedTodayFilter = '' | 'true' | 'false';
-export type HabitStatusFilter = '' | HabitStatus;
+import {
+  COMPLETED_TODAY_OPTIONS,
+  HABIT_COPY,
+  HABIT_STATUS_OPTIONS,
+} from './habitConstants';
+import type { CompletedTodayFilter, HabitStatusFilter } from './habitTypes';
 
 type HabitFiltersProps = {
   completedToday: CompletedTodayFilter;
   hasActiveFilters: boolean;
   search: string;
   status: HabitStatusFilter;
+  todayFilterDisabled: boolean;
   onClear: () => void;
   onCompletedTodayChange: (value: CompletedTodayFilter) => void;
   onSearchChange: (value: string) => void;
@@ -26,9 +29,8 @@ export function HabitFilters({
   onStatusChange,
   search,
   status,
+  todayFilterDisabled,
 }: HabitFiltersProps): JSX.Element {
-  const todayFilterDisabled = status === 'PAUSED' || status === 'ARCHIVED';
-
   return (
     <section
       aria-label="Habit filters"
@@ -36,17 +38,17 @@ export function HabitFilters({
     >
       <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         <Filter className="h-4 w-4" aria-hidden="true" />
-        Filters
+        {HABIT_COPY.filters}
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(10rem,14rem)_minmax(10rem,14rem)_auto] lg:items-end">
         <div className="relative">
           <Input
-            label="Search habits"
+            label={HABIT_COPY.searchLabel}
             name="habit-search"
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search by name or description"
+            placeholder={HABIT_COPY.searchPlaceholder}
             className="pl-10"
           />
           <Search
@@ -56,7 +58,7 @@ export function HabitFilters({
         </div>
 
         <label className="grid gap-1.5 font-bold text-slate-800 dark:text-slate-200">
-          Status
+          {HABIT_COPY.statusLabel}
           <select
             className={[
               'min-h-11 w-full rounded-md border border-slate-300 bg-white px-3.5 text-slate-950',
@@ -67,15 +69,16 @@ export function HabitFilters({
             value={status}
             onChange={(event) => onStatusChange(event.target.value as HabitStatusFilter)}
           >
-            <option value="">All</option>
-            <option value="ACTIVE">Active</option>
-            <option value="PAUSED">Paused</option>
-            <option value="ARCHIVED">Archived</option>
+            {HABIT_STATUS_OPTIONS.map((option) => (
+              <option key={option.value || 'all'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </label>
 
         <label className="grid gap-1.5 font-bold text-slate-800 dark:text-slate-200">
-          Today
+          {HABIT_COPY.todayLabel}
           <select
             className={[
               'min-h-11 w-full rounded-md border border-slate-300 bg-white px-3.5 text-slate-950',
@@ -89,16 +92,18 @@ export function HabitFilters({
             }
             disabled={todayFilterDisabled}
           >
-            <option value="">All</option>
-            <option value="true">Completed today</option>
-            <option value="false">Not completed today</option>
+            {COMPLETED_TODAY_OPTIONS.map((option) => (
+              <option key={option.value || 'all'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </label>
 
         {hasActiveFilters ? (
           <Button type="button" variant="secondary" onClick={onClear} className="w-full lg:w-auto">
             <X className="h-4 w-4" aria-hidden="true" />
-            Clear filters
+            {HABIT_COPY.clearFilters}
           </Button>
         ) : null}
       </div>
