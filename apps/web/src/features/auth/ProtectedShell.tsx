@@ -1,21 +1,15 @@
 import { LogOut, Moon, Sun } from 'lucide-react';
-import { Button } from '../../components/Button';
+import { IconButton } from '../../components/IconButton';
 import { HabitDashboard } from '../habits/HabitDashboard';
 import { useTheme } from '../theme/ThemeProvider';
 import { useAuth } from './AuthProvider';
+import { UserProfileCard } from './UserProfileCard';
 
 export function ProtectedShell(): JSX.Element {
   const { errorMessage, logout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const switchThemeLabel =
-    theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  const switchThemeLabel = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
   const ThemeIcon = theme === 'dark' ? Sun : Moon;
-  const initials = user?.displayName
-    ?.split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 dark:bg-slate-950 dark:text-white sm:px-6">
@@ -27,27 +21,18 @@ export function ProtectedShell(): JSX.Element {
           <h1 className="text-3xl font-bold">Focused Dashboard</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-900">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white dark:bg-emerald-400 dark:text-slate-950">
-              {initials || 'U'}
-            </span>
-            <span className="font-medium text-slate-700 dark:text-slate-200">
-              {user?.displayName}
-            </span>
-          </div>
-          <Button
+          <UserProfileCard user={user} />
+          <IconButton type="button" onClick={() => void logout()} aria-label="Log out">
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+          </IconButton>
+          <IconButton
             type="button"
             variant="secondary"
             onClick={toggleTheme}
             aria-label={switchThemeLabel}
           >
             <ThemeIcon className="h-4 w-4" aria-hidden="true" />
-            {theme === 'dark' ? 'Light' : 'Dark'}
-          </Button>
-          <Button type="button" onClick={() => void logout()}>
-            <LogOut className="h-4 w-4" aria-hidden="true" />
-            Log out
-          </Button>
+          </IconButton>
         </div>
       </header>
 

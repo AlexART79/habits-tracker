@@ -151,6 +151,7 @@ export function HabitDashboard(): JSX.Element {
           setFormError(null);
           setFormState({ mode: 'edit', habit });
         }}
+        onCancelDelete={() => setDeletingHabitId(null)}
         onRequestDelete={(habit) => setDeletingHabitId(habit.id)}
         onStatusChange={changeHabitStatus}
       />

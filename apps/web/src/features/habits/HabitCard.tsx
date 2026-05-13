@@ -3,11 +3,13 @@ import { Archive, CalendarDays, Pencil, Play, Pause, Trash2 } from 'lucide-react
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { IconButton } from '../../components/IconButton';
 
 type HabitCardProps = {
   habit: HabitResponse;
   isDeleting: boolean;
   isMutating: boolean;
+  onCancelDelete: () => void;
   onDelete: (habit: HabitResponse) => Promise<void>;
   onEdit: (habit: HabitResponse) => void;
   onRequestDelete: (habit: HabitResponse) => void;
@@ -18,6 +20,7 @@ export function HabitCard({
   habit,
   isDeleting,
   isMutating,
+  onCancelDelete,
   onDelete,
   onEdit,
   onRequestDelete,
@@ -54,22 +57,32 @@ export function HabitCard({
           <p className="font-medium text-red-800 dark:text-red-200">
             Are you sure you want to delete {habit.name}?
           </p>
-          <Button
-            type="button"
-            variant="danger"
-            onClick={() => void onDelete(habit)}
-            disabled={isMutating}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-            Confirm delete {habit.name}
-          </Button>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onCancelDelete}
+              disabled={isMutating}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => void onDelete(habit)}
+              disabled={isMutating}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Confirm delete {habit.name}
+            </Button>
+          </div>
         </div>
       ) : null}
 
       <div className="flex flex-wrap gap-2">
         {!isArchived ? (
           <>
-            <Button
+            <IconButton
               type="button"
               variant="secondary"
               onClick={() => onEdit(habit)}
@@ -77,10 +90,9 @@ export function HabitCard({
               aria-label={`Edit ${habit.name}`}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
-              Edit
-            </Button>
+            </IconButton>
             {habit.status === 'ACTIVE' ? (
-              <Button
+              <IconButton
                 type="button"
                 variant="secondary"
                 onClick={() => void onStatusChange(habit, 'PAUSED')}
@@ -88,10 +100,9 @@ export function HabitCard({
                 aria-label={`Pause ${habit.name}`}
               >
                 <Pause className="h-4 w-4" aria-hidden="true" />
-                Pause
-              </Button>
+              </IconButton>
             ) : (
-              <Button
+              <IconButton
                 type="button"
                 variant="secondary"
                 onClick={() => void onStatusChange(habit, 'ACTIVE')}
@@ -99,10 +110,9 @@ export function HabitCard({
                 aria-label={`Resume ${habit.name}`}
               >
                 <Play className="h-4 w-4" aria-hidden="true" />
-                Resume
-              </Button>
+              </IconButton>
             )}
-            <Button
+            <IconButton
               type="button"
               variant="secondary"
               onClick={() => void onStatusChange(habit, 'ARCHIVED')}
@@ -110,20 +120,18 @@ export function HabitCard({
               aria-label={`Archive ${habit.name}`}
             >
               <Archive className="h-4 w-4" aria-hidden="true" />
-              Archive
-            </Button>
+            </IconButton>
           </>
         ) : null}
-        <Button
+        <IconButton
           type="button"
           variant="secondary"
           onClick={() => onRequestDelete(habit)}
-        disabled={isMutating}
-        aria-label={`Delete ${habit.name}`}
-      >
-        <Trash2 className="h-4 w-4" aria-hidden="true" />
-        Delete
-      </Button>
+          disabled={isMutating}
+          aria-label={`Delete ${habit.name}`}
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+        </IconButton>
       </div>
     </Card>
   );

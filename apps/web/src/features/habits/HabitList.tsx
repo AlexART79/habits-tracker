@@ -10,6 +10,7 @@ type HabitListProps = {
   habits: HabitResponse[];
   isLoading: boolean;
   isMutating: boolean;
+  onCancelDelete: () => void;
   onDelete: (habit: HabitResponse) => Promise<void>;
   onEdit: (habit: HabitResponse) => void;
   onRequestDelete: (habit: HabitResponse) => void;
@@ -22,6 +23,7 @@ export function HabitList({
   habits,
   isLoading,
   isMutating,
+  onCancelDelete,
   onDelete,
   onEdit,
   onRequestDelete,
@@ -58,6 +60,7 @@ export function HabitList({
           habit={habit}
           isDeleting={deletingHabitId === habit.id}
           isMutating={isMutating}
+          onCancelDelete={onCancelDelete}
           onDelete={onDelete}
           onEdit={onEdit}
           onRequestDelete={onRequestDelete}

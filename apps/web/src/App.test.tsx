@@ -74,16 +74,18 @@ describe('App', () => {
     render(<App />);
 
     expect(await screen.findByText('Ada Lovelace')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Log out' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Switch to light theme' }),
-    ).toBeInTheDocument();
+    const logoutButton = screen.getByRole('button', { name: 'Log out' });
+    const themeToggle = screen.getByRole('button', {
+      name: 'Switch to light theme',
+    });
+    expect(logoutButton).toBeInTheDocument();
+    expect(logoutButton).not.toHaveTextContent('Log out');
+    expect(themeToggle).toBeInTheDocument();
+    expect(themeToggle).not.toHaveTextContent('Light');
     expect(await screen.findByText('No habits yet.')).toBeInTheDocument();
   });
 
-  it('defaults to dark theme and persists manual light theme selection', async () => {
+  it('defaults to dark theme and persists manual theme selections', async () => {
     mockFetch
       .mockResolvedValueOnce(jsonResponse(authResponse))
       .mockResolvedValueOnce(jsonResponse({ habits: [] }));
@@ -103,8 +105,18 @@ describe('App', () => {
     expect(document.documentElement).not.toHaveClass('dark');
     expect(document.documentElement).toHaveAttribute('data-theme', 'light');
     expect(localStorage.getItem('habit-tracker-theme')).toBe('light');
+    const darkThemeToggle = screen.getByRole('button', {
+      name: 'Switch to dark theme',
+    });
+    expect(darkThemeToggle).not.toHaveTextContent('Dark');
+
+    await user.click(darkThemeToggle);
+
+    expect(document.documentElement).toHaveClass('dark');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    expect(localStorage.getItem('habit-tracker-theme')).toBe('dark');
     expect(
-      screen.getByRole('button', { name: 'Switch to dark theme' }),
+      screen.getByRole('button', { name: 'Switch to light theme' }),
     ).toBeInTheDocument();
   });
 
@@ -212,7 +224,10 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Edit Read daily' }));
+    const editButton = await screen.findByRole('button', { name: 'Edit Read daily' });
+    expect(editButton).not.toHaveTextContent('Edit');
+
+    await user.click(editButton);
     await user.clear(screen.getByLabelText('Habit name'));
     await user.type(screen.getByLabelText('Habit name'), 'Read deeply');
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
@@ -237,10 +252,16 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Pause Read daily' }));
+    const pauseButton = await screen.findByRole('button', { name: 'Pause Read daily' });
+    expect(pauseButton).not.toHaveTextContent('Pause');
+
+    await user.click(pauseButton);
     expect(await screen.findByText('PAUSED')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Archive Read daily' }));
+    const archiveButton = screen.getByRole('button', { name: 'Archive Read daily' });
+    expect(archiveButton).not.toHaveTextContent('Archive');
+
+    await user.click(archiveButton);
     expect(await screen.findByText('ARCHIVED')).toBeInTheDocument();
     expect(screen.getByText('Archived habits are read-only.')).toBeInTheDocument();
     expect(
@@ -258,7 +279,10 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Delete Read daily' }));
+    const deleteButton = await screen.findByRole('button', { name: 'Delete Read daily' });
+    expect(deleteButton).not.toHaveTextContent('Delete');
+
+    await user.click(deleteButton);
     expect(
       screen.getByText('Are you sure you want to delete Read daily?'),
     ).toBeInTheDocument();
@@ -267,6 +291,16 @@ describe('App', () => {
       credentials: 'include',
     });
 
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(
+      screen.queryByText('Are you sure you want to delete Read daily?'),
+    ).not.toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalledWith('/api/habits/habit-1', {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Delete Read daily' }));
     await user.click(screen.getByRole('button', { name: 'Confirm delete Read daily' }));
 
     expect(await screen.findByText('No habits yet.')).toBeInTheDocument();
