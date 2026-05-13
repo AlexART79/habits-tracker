@@ -17,9 +17,9 @@ export function ProtectedShell(): JSX.Element {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-              Habit Tracker with Streaks
+              Habit Tracker
             </p>
-            <h1 className="text-3xl font-bold">Focused Dashboard</h1>
+            <h1 className="text-3xl font-bold">Personal Dashboard</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <UserProfileCard user={user} />
