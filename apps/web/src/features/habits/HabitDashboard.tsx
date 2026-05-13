@@ -29,6 +29,7 @@ export function HabitDashboard(): JSX.Element {
   const [listError, setListError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formState, setFormState] = useState<FormState>(null);
+  const [archivingHabitId, setArchivingHabitId] = useState<string | null>(null);
   const [deletingHabitId, setDeletingHabitId] = useState<string | null>(null);
 
   const loadHabits = useCallback(async () => {
@@ -74,6 +75,7 @@ export function HabitDashboard(): JSX.Element {
     setListError(null);
     try {
       await updateHabit(habit.id, { status });
+      setArchivingHabitId(null);
       await loadHabits();
     } catch (error) {
       setListError(error instanceof Error ? error.message : 'Unable to update habit.');
@@ -139,6 +141,7 @@ export function HabitDashboard(): JSX.Element {
       ) : null}
 
       <HabitList
+        archivingHabitId={archivingHabitId}
         deletingHabitId={deletingHabitId}
         errorMessage={listError}
         habits={habits}
@@ -150,14 +153,23 @@ export function HabitDashboard(): JSX.Element {
           setFormState(null);
           setFormError(null);
         }}
+        onCancelArchive={() => setArchivingHabitId(null)}
         onDelete={confirmDelete}
         onEdit={(habit) => {
+          setArchivingHabitId(null);
           setDeletingHabitId(null);
           setFormError(null);
           setFormState({ mode: 'edit', habit });
         }}
         onCancelDelete={() => setDeletingHabitId(null)}
-        onRequestDelete={(habit) => setDeletingHabitId(habit.id)}
+        onRequestArchive={(habit) => {
+          setDeletingHabitId(null);
+          setArchivingHabitId(habit.id);
+        }}
+        onRequestDelete={(habit) => {
+          setArchivingHabitId(null);
+          setDeletingHabitId(habit.id);
+        }}
         onSubmitEdit={submitHabit}
         onStatusChange={changeHabitStatus}
       />

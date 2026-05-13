@@ -11,6 +11,7 @@ import { HabitCard } from './HabitCard';
 import { HabitForm } from './HabitForm';
 
 type HabitListProps = {
+  archivingHabitId: string | null;
   deletingHabitId: string | null;
   editingHabit: HabitResponse | null;
   editErrorMessage: string | null;
@@ -18,16 +19,19 @@ type HabitListProps = {
   habits: HabitResponse[];
   isLoading: boolean;
   isMutating: boolean;
+  onCancelArchive: () => void;
   onCancelDelete: () => void;
   onCancelEdit: () => void;
   onDelete: (habit: HabitResponse) => Promise<void>;
   onEdit: (habit: HabitResponse) => void;
+  onRequestArchive: (habit: HabitResponse) => void;
   onRequestDelete: (habit: HabitResponse) => void;
   onSubmitEdit: (request: CreateHabitRequest | UpdateHabitRequest) => Promise<void>;
   onStatusChange: (habit: HabitResponse, status: HabitStatus) => Promise<void>;
 };
 
 export function HabitList({
+  archivingHabitId,
   deletingHabitId,
   editingHabit,
   editErrorMessage,
@@ -35,10 +39,12 @@ export function HabitList({
   habits,
   isLoading,
   isMutating,
+  onCancelArchive,
   onCancelDelete,
   onCancelEdit,
   onDelete,
   onEdit,
+  onRequestArchive,
   onRequestDelete,
   onSubmitEdit,
   onStatusChange,
@@ -82,11 +88,14 @@ export function HabitList({
           ) : (
             <HabitCard
               habit={habit}
+              isArchiving={archivingHabitId === habit.id}
               isDeleting={deletingHabitId === habit.id}
               isMutating={isMutating}
+              onCancelArchive={onCancelArchive}
               onCancelDelete={onCancelDelete}
               onDelete={onDelete}
               onEdit={onEdit}
+              onRequestArchive={onRequestArchive}
               onRequestDelete={onRequestDelete}
               onStatusChange={onStatusChange}
             />

@@ -7,22 +7,28 @@ import { IconButton } from '../../components/IconButton';
 
 type HabitCardProps = {
   habit: HabitResponse;
+  isArchiving: boolean;
   isDeleting: boolean;
   isMutating: boolean;
+  onCancelArchive: () => void;
   onCancelDelete: () => void;
   onDelete: (habit: HabitResponse) => Promise<void>;
   onEdit: (habit: HabitResponse) => void;
+  onRequestArchive: (habit: HabitResponse) => void;
   onRequestDelete: (habit: HabitResponse) => void;
   onStatusChange: (habit: HabitResponse, status: HabitStatus) => Promise<void>;
 };
 
 export function HabitCard({
   habit,
+  isArchiving,
   isDeleting,
   isMutating,
+  onCancelArchive,
   onCancelDelete,
   onDelete,
   onEdit,
+  onRequestArchive,
   onRequestDelete,
   onStatusChange,
 }: HabitCardProps): JSX.Element {
@@ -52,6 +58,33 @@ export function HabitCard({
         </p>
       ) : null}
 
+      {isArchiving ? (
+        <div className="grid gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/40 dark:bg-amber-500/10 sm:grid-cols-[1fr_auto] sm:items-center">
+          <p className="font-medium text-amber-900 dark:text-amber-100">
+            Archiving {habit.name} is irreversible and will make it read-only.
+          </p>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onCancelArchive}
+              disabled={isMutating}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => void onStatusChange(habit, 'ARCHIVED')}
+              disabled={isMutating}
+            >
+              <Archive className="h-4 w-4" aria-hidden="true" />
+              Confirm archive
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       {isDeleting ? (
         <div className="grid gap-3 rounded-md border border-red-200 bg-red-50 p-3 dark:border-red-500/40 dark:bg-red-500/10 sm:grid-cols-[1fr_auto] sm:items-center">
           <p className="font-medium text-red-800 dark:text-red-200">
@@ -73,7 +106,7 @@ export function HabitCard({
               disabled={isMutating}
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
-              Confirm delete {habit.name}
+              Confirm delete
             </Button>
           </div>
         </div>
@@ -115,7 +148,7 @@ export function HabitCard({
             <IconButton
               type="button"
               variant="secondary"
-              onClick={() => void onStatusChange(habit, 'ARCHIVED')}
+              onClick={() => onRequestArchive(habit)}
               disabled={isMutating}
               aria-label={`Archive ${habit.name}`}
             >

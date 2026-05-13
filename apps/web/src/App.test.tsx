@@ -288,9 +288,65 @@ describe('App', () => {
     expect(archiveButton).not.toHaveTextContent('Archive');
 
     await user.click(archiveButton);
+    expect(
+      screen.getByText('Archiving Read daily is irreversible and will make it read-only.'),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Confirm archive Read daily' }));
     expect(await screen.findByText('ARCHIVED')).toBeInTheDocument();
     expect(screen.getByText('Archived habits are read-only.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit Read daily' })).not.toBeInTheDocument();
+  });
+
+  it('requires confirmation before archiving a habit', async () => {
+    const archivedHabit = { ...activeHabit, status: 'ARCHIVED' };
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [activeHabit] }))
+      .mockResolvedValueOnce(jsonResponse(archivedHabit))
+      .mockResolvedValueOnce(jsonResponse({ habits: [archivedHabit] }));
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    const archiveButton = await screen.findByRole('button', { name: 'Archive Read daily' });
+    expect(archiveButton).not.toHaveTextContent('Archive');
+
+    await user.click(archiveButton);
+    expect(
+      screen.getByText('Archiving Read daily is irreversible and will make it read-only.'),
+    ).toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalledWith(
+      '/api/habits/habit-1',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'ARCHIVED' }),
+      }),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Cancel archive Read daily' }));
+    expect(
+      screen.queryByText('Archiving Read daily is irreversible and will make it read-only.'),
+    ).not.toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalledWith(
+      '/api/habits/habit-1',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'ARCHIVED' }),
+      }),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Archive Read daily' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm archive Read daily' }));
+
+    expect(await screen.findByText('ARCHIVED')).toBeInTheDocument();
+    expect(screen.getByText('Archived habits are read-only.')).toBeInTheDocument();
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/habits/habit-1',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'ARCHIVED' }),
+      }),
+    );
   });
 
   it('requires confirmation before deleting a habit', async () => {
