@@ -85,7 +85,7 @@ Create or modify these files:
 - Use PowerShell-compatible commands in docs and execution notes.
 - Use `npm install` from the repo root after package files are created.
 - Use Prisma migrations for schema changes. Do not manually edit generated Prisma client files.
-- The backend listens on `http://localhost:3001` and the frontend on `http://localhost:5173`.
+- The backend listens on `http://localhost:3001` and the frontend on `http://localhost:5174`.
 - The frontend calls `/api/health`; Vite proxies `/api` to `http://localhost:3001` during local development.
 - Backend routes are mounted at `/api`, so the health endpoint is `GET /api/health`.
 
@@ -94,6 +94,7 @@ Create or modify these files:
 ### Task 1: Root Workspace and Shared Package
 
 **Files:**
+
 - Create: `package.json`
 - Create: `tsconfig.base.json`
 - Create: `.prettierrc`
@@ -114,10 +115,7 @@ Create `package.json`:
   "name": "habit-tracker",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "dev": "concurrently \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
     "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w apps/api && npm run typecheck -w apps/web",
@@ -162,9 +160,7 @@ Create `tsconfig.base.json`:
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@habit-tracker/shared": [
-        "packages/shared/src/index.ts"
-      ]
+      "@habit-tracker/shared": ["packages/shared/src/index.ts"]
     }
   }
 }
@@ -269,17 +265,11 @@ Create `packages/shared/tsconfig.json`:
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": [
-      "ES2022"
-    ],
-    "types": [
-      "vitest/globals"
-    ],
+    "lib": ["ES2022"],
+    "types": ["vitest/globals"],
     "noEmit": true
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }
 ```
 
@@ -330,7 +320,12 @@ Create `packages/shared/src/constants.test.ts`:
 
 ```typescript
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_APP_TIMEZONE, HABIT_STATUSES, MILESTONE_DAYS, WEBSOCKET_EVENTS } from './constants';
+import {
+  DEFAULT_APP_TIMEZONE,
+  HABIT_STATUSES,
+  MILESTONE_DAYS,
+  WEBSOCKET_EVENTS,
+} from './constants';
 
 describe('shared constants', () => {
   it('centralizes habit statuses and milestone values', () => {
@@ -391,6 +386,7 @@ Expected: Commit succeeds with the root workspace and shared package.
 ### Task 2: Backend NestJS Health API
 
 **Files:**
+
 - Create: `apps/api/package.json`
 - Create: `apps/api/tsconfig.json`
 - Create: `apps/api/tsconfig.build.json`
@@ -465,24 +461,15 @@ Create `apps/api/tsconfig.json`:
     "module": "CommonJS",
     "moduleResolution": "Node",
     "target": "ES2022",
-    "lib": [
-      "ES2022"
-    ],
-    "types": [
-      "node",
-      "vitest/globals"
-    ],
+    "lib": ["ES2022"],
+    "types": ["node", "vitest/globals"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
     "outDir": "dist",
     "noEmit": true
   },
-  "include": [
-    "src",
-    "test",
-    "vitest.config.ts"
-  ]
+  "include": ["src", "test", "vitest.config.ts"]
 }
 ```
 
@@ -495,10 +482,7 @@ Create `apps/api/tsconfig.build.json`:
     "noEmit": false,
     "rootDir": "src"
   },
-  "exclude": [
-    "src/**/*.spec.ts",
-    "test/**/*.ts"
-  ]
+  "exclude": ["src/**/*.spec.ts", "test/**/*.ts"]
 }
 ```
 
@@ -633,7 +617,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
   app.enableCors({
-    origin: process.env.WEB_ORIGIN ?? 'http://localhost:5173',
+    origin: process.env.WEB_ORIGIN ?? 'http://localhost:5174',
     credentials: true,
   });
   app.useGlobalPipes(
@@ -796,6 +780,7 @@ Expected: Commit succeeds with the backend skeleton.
 ### Task 3: Prisma SQLite Foundation
 
 **Files:**
+
 - Create: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/src/prisma/prisma.module.ts`
 - Create: `apps/api/src/prisma/prisma.service.ts`
@@ -888,7 +873,7 @@ Create `apps/api/.env.example`:
 
 ```text
 PORT=3001
-WEB_ORIGIN=http://localhost:5173
+WEB_ORIGIN=http://localhost:5174
 DATABASE_URL=file:./dev.db
 APP_TIMEZONE=UTC
 GOOGLE_CLIENT_ID=
@@ -1064,6 +1049,7 @@ Expected: Commit succeeds with schema, migration, Prisma module, and tests. Do n
 ### Task 4: Frontend Vite React Shell and API Client
 
 **Files:**
+
 - Create: `apps/web/package.json`
 - Create: `apps/web/tsconfig.json`
 - Create: `apps/web/tsconfig.node.json`
@@ -1125,22 +1111,13 @@ Create `apps/web/tsconfig.json`:
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "types": [
-      "vite/client",
-      "vitest/globals"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "vitest/globals"],
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
       "path": "./tsconfig.node.json"
@@ -1158,15 +1135,10 @@ Create `apps/web/tsconfig.node.json`:
     "composite": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "vite.config.ts",
-    "tailwind.config.ts"
-  ]
+  "include": ["vite.config.ts", "tailwind.config.ts"]
 }
 ```
 
@@ -1179,7 +1151,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    port: 5174,
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -1474,7 +1446,13 @@ Create `apps/web/src/index.css`:
 body {
   margin: 0;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
 }
 ```
 
@@ -1512,6 +1490,7 @@ Expected: Commit succeeds with frontend skeleton and tests.
 ### Task 5: Tailwind and Reusable UI Primitives
 
 **Files:**
+
 - Modify: `apps/web/package.json`
 - Create: `apps/web/postcss.config.cjs`
 - Create: `apps/web/tailwind.config.ts`
@@ -1584,7 +1563,13 @@ Modify `apps/web/src/index.css`:
   body {
     margin: 0;
     font-family:
-      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      Inter,
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      sans-serif;
   }
 
   :focus-visible {
@@ -1613,7 +1598,12 @@ const variantClasses = {
     'border border-slate-300 bg-white text-slate-900 hover:bg-slate-100 focus-visible:outline-emerald-700 disabled:bg-slate-100 disabled:text-slate-500',
 };
 
-export function Button({ children, className = '', variant = 'primary', ...props }: ButtonProps): JSX.Element {
+export function Button({
+  children,
+  className = '',
+  variant = 'primary',
+  ...props
+}: ButtonProps): JSX.Element {
   return (
     <button
       className={[
@@ -1822,13 +1812,14 @@ Expected: Commit succeeds with Tailwind and reusable UI primitives.
 ### Task 6: README Phase 0 Documentation
 
 **Files:**
+
 - Create or modify: `README.md`
 
 - [ ] **Step 1: Write README with accurate Phase 0 instructions**
 
 Create or replace `README.md`:
 
-```markdown
+````markdown
 # Habit Tracker with Streaks
 
 Full-stack TypeScript habit tracker built with NestJS, React, Vite, Tailwind CSS, Prisma, and SQLite.
@@ -1856,6 +1847,7 @@ Authentication, habit CRUD, check-ins, streaks, search, filters, and WebSocket m
 ```powershell
 npm install
 ```
+````
 
 ## Environment
 
@@ -1869,7 +1861,7 @@ Default local values:
 
 ```text
 PORT=3001
-WEB_ORIGIN=http://localhost:5173
+WEB_ORIGIN=http://localhost:5174
 DATABASE_URL=file:./dev.db
 APP_TIMEZONE=UTC
 ```
@@ -1918,7 +1910,7 @@ http://localhost:3001/api
 Web:
 
 ```text
-http://localhost:5173
+http://localhost:5174
 ```
 
 Health endpoint:
@@ -2054,7 +2046,8 @@ GitHub email may be missing. The app identity model uses `provider + providerUse
 ## Docker
 
 Docker is skipped in Phase 0. The app must run locally through the npm commands above.
-```
+
+````
 
 - [ ] **Step 2: Verify README commands that do not start long-running servers**
 
@@ -2062,7 +2055,7 @@ Run:
 
 ```powershell
 npm run prisma:generate -w apps/api
-```
+````
 
 Expected: Prisma client generation succeeds.
 
@@ -2106,6 +2099,7 @@ Expected: Commit succeeds with Phase 0 documentation.
 ### Task 7: End-to-End Phase 0 Verification
 
 **Files:**
+
 - No expected source changes unless verification reveals a defect.
 
 - [ ] **Step 1: Run the required quality gate**
@@ -2171,12 +2165,12 @@ npm run dev
 Expected:
 
 - API starts on `http://localhost:3001`.
-- Web starts on `http://localhost:5173`.
+- Web starts on `http://localhost:5174`.
 
 Open:
 
 ```text
-http://localhost:5173
+http://localhost:5174
 ```
 
 Expected visible behavior:
@@ -2199,7 +2193,7 @@ Verification passed:
 - npm run lint
 - npm test
 - GET /api/health returned 200
-- Web shell displayed API connected at http://localhost:5173
+- Web shell displayed API connected at http://localhost:5174
 ```
 
 - [ ] **Step 5: Final commit if verification fixes were needed**

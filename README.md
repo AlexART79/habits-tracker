@@ -4,7 +4,7 @@ A full-stack TypeScript habit tracker for building routines, tracking daily chec
 
 ## Project Status
 
-Current status: Phase 0 foundation.
+Current status: Phase 1 authentication and user isolation foundation.
 
 Implemented now:
 
@@ -13,8 +13,11 @@ Implemented now:
 - Tailwind CSS light-theme styling
 - Prisma schema for SQLite
 - npm workspace scripts for local development, typecheck, lint, and tests
+- SSO-only auth entry screen with Google and GitHub routes
+- Server-owned cookie session with `GET /api/auth/me` and `POST /api/auth/logout`
+- Test/dev mock SSO login endpoint for automated tests and local debugging
 
-Planned later phases add SSO auth, habit CRUD, check-ins, streak calculations, search/filter UI, and WebSocket milestone notifications.
+Planned later phases add habit CRUD, check-ins, streak calculations, search/filter UI, and WebSocket milestone notifications.
 
 ## Stack
 
@@ -52,6 +55,9 @@ PORT=3001
 WEB_ORIGIN=http://localhost:5174
 DATABASE_URL=file:./dev.db
 APP_TIMEZONE=UTC
+SESSION_SECRET=replace-with-a-long-random-secret
+AUTH_TEST_MODE=true
+WEB_AUTH_SUCCESS_URL=http://localhost:5174/
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
@@ -60,7 +66,7 @@ GITHUB_CLIENT_SECRET=
 GITHUB_CALLBACK_URL=http://localhost:3001/api/auth/github/callback
 ```
 
-OAuth values can stay blank during Phase 0 because the OAuth flows are not implemented yet.
+Use a long random `SESSION_SECRET` for local sessions. `AUTH_TEST_MODE=true` is for local development and automated tests only; the mock login endpoint is still blocked when `NODE_ENV=production`.
 
 ## Database Setup
 
@@ -142,9 +148,23 @@ npm test
 
 Every story/change must include relevant automated tests and must pass typecheck, lint, and tests before being considered complete.
 
+## Authentication
+
+Authentication is SSO only. The app supports Google OAuth/OIDC and GitHub OAuth. Local users are created automatically on first successful sign-in and are identified by `provider + providerUserId`; email is optional because GitHub may not return one.
+
+Session state is owned by the backend in an `express-session` cookie named `habit_tracker_session`. The frontend checks `GET /api/auth/me` on boot, includes cookies on auth API calls, and returns to the login screen after `POST /api/auth/logout` succeeds.
+
+Automated tests and local mock sign-in use `POST /api/auth/test-login`. This endpoint returns a session for a mock provider profile and does not call Google or GitHub. It is unavailable when `NODE_ENV=production`.
+
 ## Google OAuth Setup
 
-Google OAuth is planned for Phase 1. When implemented, create OAuth credentials in Google Cloud Console and configure:
+Create OAuth credentials in Google Cloud Console with this callback URL:
+
+```text
+http://localhost:3001/api/auth/google/callback
+```
+
+Configure:
 
 ```text
 GOOGLE_CLIENT_ID=
@@ -156,7 +176,13 @@ Automated tests must mock or stub Google responses and must not call real Google
 
 ## GitHub OAuth Setup
 
-GitHub OAuth is planned for Phase 1. When implemented, create a GitHub OAuth app and configure:
+Create a GitHub OAuth app with this callback URL:
+
+```text
+http://localhost:3001/api/auth/github/callback
+```
+
+Configure:
 
 ```text
 GITHUB_CLIENT_ID=
@@ -168,21 +194,22 @@ GitHub email may be missing. User identity is based on `provider + providerUserI
 
 ## API Summary
 
-Implemented in Phase 0:
+Implemented:
 
 ```text
 GET /api/health
-```
-
-Planned API surface:
-
-```text
 GET    /api/auth/google
 GET    /api/auth/google/callback
 GET    /api/auth/github
 GET    /api/auth/github/callback
 GET    /api/auth/me
 POST   /api/auth/logout
+POST   /api/auth/test-login
+```
+
+Planned API surface:
+
+```text
 GET    /api/habits
 POST   /api/habits
 GET    /api/habits/:id

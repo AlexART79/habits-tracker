@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { App } from './App';
@@ -11,57 +12,93 @@ beforeEach(() => {
 });
 
 describe('App', () => {
-  it('renders the habit tracker shell while backend health is loading', () => {
+  it('shows sign-in status while auth state is loading', () => {
     mockFetch.mockReturnValue(new Promise(() => undefined));
 
     render(<App />);
 
-    expect(
-      screen.getByRole('heading', { name: 'Habit Tracker' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('Checking backend connection...'),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Checking sign-in status...',
+    );
   });
 
-  it('shows the connected state after the health check succeeds', async () => {
+  it('renders Google and GitHub login buttons when unauthenticated', async () => {
+    mockFetch.mockResolvedValue(new Response(null, { status: 401 }));
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('link', { name: 'Continue with Google' }),
+    ).toHaveAttribute('href', '/api/auth/google');
+    expect(
+      screen.getByRole('link', { name: 'Continue with GitHub' }),
+    ).toHaveAttribute('href', '/api/auth/github');
+  });
+
+  it('renders authenticated shell with the user display name', async () => {
     mockFetch.mockResolvedValue(
       new Response(
         JSON.stringify({
-          status: 'ok',
-          service: 'habit-tracker-api',
-          timestamp: '2026-05-12T20:00:00.000Z',
+          user: {
+            id: 'user-1',
+            provider: 'test',
+            providerUserId: 'test-user-1',
+            email: null,
+            displayName: 'Ada Lovelace',
+            avatarUrl: null,
+          },
         }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        },
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
     );
 
     render(<App />);
 
-    expect(await screen.findByText('API connected')).toBeInTheDocument();
-  });
-
-  it('renders disabled first habit and search controls accessibly', () => {
-    mockFetch.mockReturnValue(new Promise(() => undefined));
-
-    render(<App />);
-
+    expect(await screen.findByText('Ada Lovelace')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Create first habit' }),
-    ).toBeDisabled();
+      screen.getByRole('button', { name: 'Log out' }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('Search habits')).toBeDisabled();
   });
 
-  it('shows an alert when the backend health check fails', async () => {
-    mockFetch.mockResolvedValue(new Response(null, { status: 503 }));
+  it('logs out and returns to the login screen', async () => {
+    mockFetch
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            user: {
+              id: 'user-1',
+              provider: 'test',
+              providerUserId: 'test-user-1',
+              email: null,
+              displayName: 'Ada Lovelace',
+              avatarUrl: null,
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
 
+    const user = userEvent.setup();
     render(<App />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Backend health check failed.',
-    );
+    await user.click(await screen.findByRole('button', { name: 'Log out' }));
+
+    expect(mockFetch).toHaveBeenLastCalledWith('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    expect(
+      await screen.findByRole('link', { name: 'Continue with Google' }),
+    ).toBeInTheDocument();
   });
 });

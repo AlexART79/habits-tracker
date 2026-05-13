@@ -1,7 +1,11 @@
-import type { HealthResponse } from '@habit-tracker/shared';
+import type {
+  AuthLogoutResponse,
+  AuthMeResponse,
+  HealthResponse,
+} from '@habit-tracker/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getHealth } from './apiClient';
+import { getCurrentUser, getHealth, logout } from './apiClient';
 
 const mockFetch = vi.fn<typeof fetch>();
 
@@ -35,5 +39,51 @@ describe('getHealth', () => {
     await expect(getHealth()).rejects.toThrow(
       'Backend health check failed.',
     );
+  });
+});
+
+describe('getCurrentUser', () => {
+  it('fetches the current authenticated user with cookies included', async () => {
+    const authMeResponse: AuthMeResponse = {
+      user: {
+        id: 'user-1',
+        provider: 'google',
+        providerUserId: 'google-user-1',
+        email: 'user@example.com',
+        displayName: 'Ada Lovelace',
+        avatarUrl: 'https://example.com/avatar.png',
+      },
+    };
+
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(authMeResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(getCurrentUser()).resolves.toEqual(authMeResponse);
+    expect(mockFetch).toHaveBeenCalledWith('/api/auth/me', {
+      credentials: 'include',
+    });
+  });
+});
+
+describe('logout', () => {
+  it('posts to the logout endpoint with cookies included', async () => {
+    const logoutResponse: AuthLogoutResponse = { ok: true };
+
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(logoutResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(logout()).resolves.toEqual(logoutResponse);
+    expect(mockFetch).toHaveBeenCalledWith('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
   });
 });

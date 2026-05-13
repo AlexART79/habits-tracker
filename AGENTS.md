@@ -2,69 +2,68 @@
 
 ## TypeScript
 
-* Use `strict: true`.
-* Avoid `any`.
-* Prefer explicit API response types.
-* Keep domain enums centralized.
-* Do not duplicate magic strings for statuses, milestones, or WebSocket events.
+- Use `strict: true`.
+- Avoid `any`.
+- Prefer explicit API response types.
+- Keep domain enums centralized.
+- Do not duplicate magic strings for statuses, milestones, or WebSocket events.
 
 ## NestJS
 
-* Organize by feature module:
+- Organize by feature module:
+  - `auth`
+  - `users`
+  - `habits`
+  - `check-ins`
+  - `streaks`
+  - `notifications`
 
-  * `auth`
-  * `users`
-  * `habits`
-  * `check-ins`
-  * `streaks`
-  * `notifications`
-* Controllers should be thin.
-* Business rules belong in services.
-* Use guards for authentication.
-* Always enforce ownership in service/query layer.
-* Use global validation pipe:
+- Controllers should be thin.
+- Business rules belong in services.
+- Use guards for authentication.
+- Always enforce ownership in service/query layer.
+- Use global validation pipe:
+  - `whitelist: true`
+  - `forbidNonWhitelisted: true`
+  - `transform: true`
 
-  * `whitelist: true`
-  * `forbidNonWhitelisted: true`
-  * `transform: true`
-* Return clear `400`, `401`, `403`, `404`, and `409` errors.
-* Never trust client-provided `userId`.
+- Return clear `400`, `401`, `403`, `404`, and `409` errors.
+- Never trust client-provided `userId`.
 
 ## React
 
-* Keep server state in a query layer, for example TanStack Query or a small explicit API hook layer.
-* Keep form state local to forms.
-* Avoid duplicating derived state.
-* Test via user-visible behavior.
-* Prefer accessible controls with labels and roles.
+- Keep server state in a query layer, for example TanStack Query or a small explicit API hook layer.
+- Keep form state local to forms.
+- Avoid duplicating derived state.
+- Test via user-visible behavior.
+- Prefer accessible controls with labels and roles.
 
 ## Tailwind
 
-* Mobile-first layout.
-* Use consistent spacing scale.
-* Add visible `hover:`, `focus:`, `disabled:` states.
-* Keep repeated class groups in small reusable components.
-* Support both light and dark theme.
+- Mobile-first layout.
+- Use consistent spacing scale.
+- Add visible `hover:`, `focus:`, `disabled:` states.
+- Keep repeated class groups in small reusable components.
+- Support both light and dark theme.
 
 ## Testing
 
 Backend:
 
-* Unit test pure streak logic.
-* Integration test API flows with Supertest.
-* Use test database.
-* Mock SSO provider responses.
-* Do not call Google/GitHub from tests.
-* Test authorization failures.
+- Unit test pure streak logic.
+- Integration test API flows with Supertest.
+- Use test database.
+- Mock SSO provider responses.
+- Do not call Google/GitHub from tests.
+- Test authorization failures.
 
 Frontend:
 
-* Use React Testing Library.
-* Test user-visible behavior.
-* Test validation messages.
-* Test loading, error, and empty states.
-* No Playwright e2e UI tests required.
-
+- Use React Testing Library.
+- Test user-visible behavior.
+- Test validation messages.
+- Test loading, error, and empty states.
+- No Playwright e2e UI tests required.
 
 ## Project
 
@@ -451,8 +450,24 @@ Before finishing the project, verify:
 - Client sends meaningful WebSocket message.
 - App runs locally from README commands.
 - Tests pass locally.
+
 ```
 
 [1]: https://docs.nestjs.com/recipes/passport "passport | NestJS - A progressive Node.js framework"
 [2]: https://www.prisma.io/docs/orm/core-concepts/supported-databases/sqlite "SQLite database connector | Prisma Documentation"
 [3]: https://react.dev/learn/managing-state "Managing State – React"
+
+
+## Brevity Rules
+
+- Prefer concise updates. Say what changed, what was verified, and what remains.
+- Do not restate the full task or requirements unless correcting a misunderstanding.
+- Avoid long explanations of obvious code. Explain intent, tradeoffs, and risky parts only.
+- When reporting file changes, group related files instead of describing every small edit.
+- For command output, summarize the important result instead of pasting full logs.
+- For plans, use short milestones and concrete outcomes. Avoid implementation essays.
+- For final responses, keep to 3-6 bullets or 1-3 short paragraphs unless the user asks for detail.
+- Include exact errors, failing test names, file paths, and commands when they matter.
+- Do not include "next steps" unless they are actionable and relevant.
+- If nothing was tested, say that briefly and why.
+```
