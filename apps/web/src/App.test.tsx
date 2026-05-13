@@ -9,6 +9,9 @@ const mockFetch = vi.fn<typeof fetch>();
 beforeEach(() => {
   mockFetch.mockReset();
   vi.stubGlobal('fetch', mockFetch);
+  localStorage.clear();
+  document.documentElement.className = '';
+  document.documentElement.removeAttribute('data-theme');
 });
 
 describe('App', () => {
@@ -74,7 +77,35 @@ describe('App', () => {
     expect(
       screen.getByRole('button', { name: 'Log out' }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Switch to light theme' }),
+    ).toBeInTheDocument();
     expect(await screen.findByText('No habits yet.')).toBeInTheDocument();
+  });
+
+  it('defaults to dark theme and persists manual light theme selection', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [] }));
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    const themeToggle = await screen.findByRole('button', {
+      name: 'Switch to light theme',
+    });
+
+    expect(document.documentElement).toHaveClass('dark');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+
+    await user.click(themeToggle);
+
+    expect(document.documentElement).not.toHaveClass('dark');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+    expect(localStorage.getItem('habit-tracker-theme')).toBe('light');
+    expect(
+      screen.getByRole('button', { name: 'Switch to dark theme' }),
+    ).toBeInTheDocument();
   });
 
   it('logs out and returns to the login screen', async () => {

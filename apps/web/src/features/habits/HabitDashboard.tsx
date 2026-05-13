@@ -5,7 +5,9 @@ import type {
   HabitStatus,
   UpdateHabitRequest,
 } from '@habit-tracker/shared';
+import { Activity, Archive, CirclePause, CirclePlus, ListChecks } from 'lucide-react';
 import { Button } from '../../components/Button';
+import { StatTile } from '../../components/StatTile';
 import {
   createHabit,
   deleteHabit,
@@ -94,16 +96,33 @@ export function HabitDashboard(): JSX.Element {
     }
   }
 
+  const activeCount = habits.filter((habit) => habit.status === 'ACTIVE').length;
+  const pausedCount = habits.filter((habit) => habit.status === 'PAUSED').length;
+  const archivedCount = habits.filter((habit) => habit.status === 'ARCHIVED').length;
+
   return (
     <section className="grid gap-5" aria-label="Habit dashboard">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-950">Your habits</h2>
-          <p className="text-slate-700">Create and manage your routine list.</p>
+          <p className="text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Today
+          </p>
+          <h2 className="text-3xl font-bold text-slate-950 dark:text-white">Your habits</h2>
+          <p className="mt-1 text-slate-700 dark:text-slate-300">
+            Create, review, and tune the routines you are tracking.
+          </p>
         </div>
         <Button type="button" onClick={() => setFormState({ mode: 'create' })}>
+          <CirclePlus className="h-4 w-4" aria-hidden="true" />
           Create habit
         </Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatTile icon={ListChecks} label="Total habits" value={habits.length} />
+        <StatTile icon={Activity} label="Active" value={activeCount} />
+        <StatTile icon={CirclePause} label="Paused" value={pausedCount} />
+        <StatTile icon={Archive} label="Archived" value={archivedCount} />
       </div>
 
       {formState ? (

@@ -1,4 +1,7 @@
 import type { HabitResponse, HabitStatus } from '@habit-tracker/shared';
+import { ListPlus } from 'lucide-react';
+import { Alert } from '../../components/Alert';
+import { EmptyState } from '../../components/EmptyState';
 import { HabitCard } from './HabitCard';
 
 type HabitListProps = {
@@ -26,28 +29,24 @@ export function HabitList({
 }: HabitListProps): JSX.Element {
   if (isLoading) {
     return (
-      <p role="status" className="font-bold text-slate-700">
+      <p
+        role="status"
+        className="rounded-lg border border-slate-200 bg-white/80 px-4 py-3 font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-200"
+      >
         Loading habits...
       </p>
     );
   }
 
   if (errorMessage) {
-    return (
-      <p role="alert" className="font-medium text-red-700">
-        {errorMessage}
-      </p>
-    );
+    return <Alert>{errorMessage}</Alert>;
   }
 
   if (habits.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-slate-300 bg-white p-6">
-        <h2 className="text-xl font-bold text-slate-950">No habits yet.</h2>
-        <p className="mt-2 text-slate-700">
-          Create your first habit to start tracking progress.
-        </p>
-      </div>
+      <EmptyState icon={ListPlus} title="No habits yet.">
+        Create your first habit to start tracking progress.
+      </EmptyState>
     );
   }
 

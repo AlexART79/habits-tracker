@@ -17,6 +17,19 @@
     min-height: 100vh;
     margin: 0;
     background: #f7f8fb;
+    color: #172033;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.dark body {
+    background: #020617;
+    color: #f8fafc;
   }
 
   :focus-visible {
