@@ -85,6 +85,19 @@ describe('App', () => {
     expect(await screen.findByText('No habits yet.')).toBeInTheDocument();
   });
 
+  it('renders the authenticated header as a distinct sticky top bar', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [] }));
+
+    render(<App />);
+
+    const header = (await screen.findByText('Habit Tracker with Streaks')).closest('header');
+
+    expect(header).toHaveClass('sticky', 'top-0', 'z-30', 'shadow-md');
+    expect(header).not.toHaveClass('rounded-lg', 'border');
+  });
+
   it('defaults to dark theme and persists manual theme selections', async () => {
     mockFetch
       .mockResolvedValueOnce(jsonResponse(authResponse))
