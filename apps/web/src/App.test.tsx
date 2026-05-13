@@ -7,6 +7,7 @@ import { App } from './App';
 const mockFetch = vi.fn<typeof fetch>();
 
 beforeEach(() => {
+  vi.useRealTimers();
   mockFetch.mockReset();
   vi.stubGlobal('fetch', mockFetch);
   localStorage.clear();
@@ -193,6 +194,71 @@ describe('App', () => {
     expect(screen.getByText('Current streak')).toBeInTheDocument();
     expect(screen.getByText('Best streak')).toBeInTheDocument();
     expect(screen.getByText('Total check-ins')).toBeInTheDocument();
+  });
+
+  it('debounces search and refetches habits with filter query params', async () => {
+    const user = userEvent.setup();
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [activeHabit] }))
+      .mockImplementation(() => Promise.resolve(jsonResponse({ habits: [] })));
+
+    render(<App />);
+
+    await screen.findByText('Read daily');
+    await user.type(screen.getByLabelText('Search habits'), 'walk');
+    await user.selectOptions(screen.getByLabelText('Status'), 'ACTIVE');
+    await user.selectOptions(screen.getByLabelText('Today'), 'false');
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/habits?search=walk&status=ACTIVE&completedToday=false',
+        { credentials: 'include' },
+      );
+    });
+    expect(await screen.findByText('No habits match your filters.')).toBeInTheDocument();
+  });
+
+  it('clears today filter when selecting an inactive status and can reset all filters', async () => {
+    const user = userEvent.setup();
+    const pausedHabit = { ...activeHabit, id: 'habit-2', name: 'Plan meals', status: 'PAUSED' };
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [activeHabit] }))
+      .mockImplementation(() =>
+        Promise.resolve(jsonResponse({ habits: [activeHabit, pausedHabit] })),
+      );
+
+    render(<App />);
+
+    await screen.findByText('Read daily');
+    await user.selectOptions(screen.getByLabelText('Today'), 'true');
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/habits?completedToday=true', {
+        credentials: 'include',
+      });
+    });
+
+    await user.selectOptions(screen.getByLabelText('Status'), 'PAUSED');
+    expect(screen.getByLabelText('Today')).toBeDisabled();
+    expect(screen.getByLabelText('Today')).toHaveValue('');
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/habits?status=PAUSED', {
+        credentials: 'include',
+      });
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/habits', {
+        credentials: 'include',
+      });
+    });
+    expect(screen.getByLabelText('Status')).toHaveValue('');
+    expect(screen.getByLabelText('Today')).not.toBeDisabled();
   });
 
   it('checks in an active habit and refreshes to the undo state', async () => {

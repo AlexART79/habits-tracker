@@ -6,6 +6,7 @@ import type {
   CreateHabitRequest,
   DeleteHabitResponse,
   HabitListResponse,
+  ListHabitsRequest,
   HabitResponse,
   HealthResponse,
   UndoCheckInResponse,
@@ -52,8 +53,29 @@ export async function logout(): Promise<AuthLogoutResponse> {
   return readJson<AuthLogoutResponse>(response, 'Logout failed.');
 }
 
-export async function listHabits(): Promise<HabitListResponse> {
-  const response = await fetch('/api/habits', {
+function buildHabitListUrl(filters?: ListHabitsRequest): string {
+  const params = new URLSearchParams();
+  const search = filters?.search?.trim();
+
+  if (search) {
+    params.set('search', search);
+  }
+
+  if (filters?.status) {
+    params.set('status', filters.status);
+  }
+
+  if (filters?.completedToday !== undefined) {
+    params.set('completedToday', String(filters.completedToday));
+  }
+
+  const queryString = params.toString();
+
+  return queryString ? `/api/habits?${queryString}` : '/api/habits';
+}
+
+export async function listHabits(filters?: ListHabitsRequest): Promise<HabitListResponse> {
+  const response = await fetch(buildHabitListUrl(filters), {
     credentials: 'include',
   });
 

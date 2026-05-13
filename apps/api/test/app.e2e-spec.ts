@@ -211,12 +211,13 @@ describe('App endpoints', () => {
     async function createHabit(
       agent: ReturnType<typeof request.agent>,
       name = 'Read daily',
+      description = 'Read for twenty minutes',
     ) {
       const response = await agent
         .post('/api/habits')
         .send({
           name,
-          description: 'Read for twenty minutes',
+          description,
           startDate: '2026-05-13',
         })
         .expect(201);
@@ -310,6 +311,83 @@ describe('App endpoints', () => {
         id: firstHabit.id,
         name: 'Owner habit',
       });
+    });
+
+    it('filters habits by search text, status, and today check-in state without leaking other users data', async () => {
+      const ownerAgent = await loginTestUser('filter-owner');
+      const otherAgent = await loginTestUser('filter-other');
+      const readingHabit = await createHabit(
+        ownerAgent,
+        'Read daily',
+        'Read for twenty minutes',
+      );
+      const walkHabit = await createHabit(
+        ownerAgent,
+        'Walk outside',
+        'Gentle exercise after lunch',
+      );
+      const pausedHabit = await createHabit(
+        ownerAgent,
+        'Plan meals',
+        'Weekly meal prep',
+      );
+
+      await createHabit(otherAgent, 'Other read habit', 'Read private notes');
+      await ownerAgent.patch(`/api/habits/${pausedHabit.id}`).send({ status: 'PAUSED' }).expect(200);
+      await ownerAgent.post(`/api/habits/${readingHabit.id}/check-ins/today`).expect(201);
+
+      const nameSearchResponse = await ownerAgent.get('/api/habits?search=read').expect(200);
+      expect(nameSearchResponse.body.habits).toHaveLength(1);
+      expect(nameSearchResponse.body.habits[0]).toMatchObject({
+        id: readingHabit.id,
+        name: 'Read daily',
+      });
+
+      const descriptionSearchResponse = await ownerAgent
+        .get('/api/habits?search=exercise')
+        .expect(200);
+      expect(descriptionSearchResponse.body.habits).toHaveLength(1);
+      expect(descriptionSearchResponse.body.habits[0]).toMatchObject({
+        id: walkHabit.id,
+        name: 'Walk outside',
+      });
+
+      const statusResponse = await ownerAgent.get('/api/habits?status=PAUSED').expect(200);
+      expect(statusResponse.body.habits).toHaveLength(1);
+      expect(statusResponse.body.habits[0]).toMatchObject({
+        id: pausedHabit.id,
+        status: 'PAUSED',
+      });
+
+      const completedTodayResponse = await ownerAgent
+        .get('/api/habits?completedToday=true')
+        .expect(200);
+      expect(completedTodayResponse.body.habits).toEqual([
+        expect.objectContaining({
+          id: readingHabit.id,
+          completedToday: true,
+          status: 'ACTIVE',
+        }),
+      ]);
+
+      const notCompletedTodayResponse = await ownerAgent
+        .get('/api/habits?completedToday=false')
+        .expect(200);
+      expect(notCompletedTodayResponse.body.habits).toEqual([
+        expect.objectContaining({
+          id: walkHabit.id,
+          completedToday: false,
+          status: 'ACTIVE',
+        }),
+      ]);
+    });
+
+    it('rejects invalid today filter values and inactive today-filter combinations', async () => {
+      const agent = await loginTestUser('invalid-filter-user');
+
+      await agent.get('/api/habits?completedToday=maybe').expect(400);
+      await agent.get('/api/habits?status=PAUSED&completedToday=true').expect(400);
+      await agent.get('/api/habits?status=ARCHIVED&completedToday=false').expect(400);
     });
 
     it('blocks cross-user read and edit access', async () => {

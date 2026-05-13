@@ -4,13 +4,13 @@ A full-stack TypeScript habit tracker for building routines, tracking daily chec
 
 ## Project Status
 
-Current status: Phase 3 daily check-ins and streak calculations.
+Current status: Phase 4 search, filters, and responsive UI hardening.
 
 Implemented now:
 
 - NestJS API skeleton with `GET /api/health`
 - React and Vite web shell
-- Tailwind CSS light-theme styling
+- Tailwind CSS styling with dark mode by default and a light/dark toggle
 - Prisma schema for SQLite
 - npm workspace scripts for local development, typecheck, lint, and tests
 - SSO-only auth entry screen with Google and GitHub routes
@@ -22,8 +22,10 @@ Implemented now:
 - Today-only check-ins and undo for active habits
 - Current, best, and total streak metrics on habit cards
 - Current-month check-in history for each habit
+- Habit search by name/description, status filtering, and completed-today filtering
+- Responsive habit filter controls and filtered-results empty states
 
-Planned later phases add search/filter UI and WebSocket milestone notifications.
+Planned later phases add WebSocket milestone notifications.
 
 ## Stack
 
@@ -224,7 +226,7 @@ GET    /api/auth/github/callback
 GET    /api/auth/me
 POST   /api/auth/logout
 POST   /api/auth/test-login
-GET    /api/habits
+GET    /api/habits?search=&status=ACTIVE&completedToday=true
 POST   /api/habits
 GET    /api/habits/:id
 PATCH  /api/habits/:id
@@ -269,6 +271,14 @@ Habit responses include:
 ```
 
 `GET /api/habits` returns `{ "habits": [...] }` ordered newest first.
+
+Optional list filters:
+
+- `search`: trims and matches habit name or description.
+- `status`: one of `ACTIVE`, `PAUSED`, or `ARCHIVED`.
+- `completedToday`: `true` or `false`; this filter applies to active habits only.
+
+Requests combining `completedToday` with `status=PAUSED` or `status=ARCHIVED` return `400 Bad Request`.
 
 ### Habit Status Rules
 

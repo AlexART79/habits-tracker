@@ -134,6 +134,52 @@ describe('habit API', () => {
     });
   });
 
+  it('lists habits with serialized search and filter query params', async () => {
+    const response: HabitListResponse = { habits: [habitResponse] };
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(
+      listHabits({
+        search: '  read  ',
+        status: 'ACTIVE',
+        completedToday: false,
+      }),
+    ).resolves.toEqual(response);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/habits?search=read&status=ACTIVE&completedToday=false',
+      {
+        credentials: 'include',
+      },
+    );
+  });
+
+  it('omits empty habit list filters from query params', async () => {
+    const response: HabitListResponse = { habits: [] };
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(
+      listHabits({
+        search: '   ',
+        completedToday: undefined,
+      }),
+    ).resolves.toEqual(response);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/habits', {
+      credentials: 'include',
+    });
+  });
+
   it('creates a habit with JSON body and cookies included', async () => {
     mockFetch.mockResolvedValue(
       new Response(JSON.stringify(habitResponse), {

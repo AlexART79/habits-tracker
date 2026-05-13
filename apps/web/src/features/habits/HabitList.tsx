@@ -16,6 +16,7 @@ type HabitListProps = {
   editingHabit: HabitResponse | null;
   editErrorMessage: string | null;
   errorMessage: string | null;
+  hasActiveFilters: boolean;
   habits: HabitResponse[];
   isLoading: boolean;
   isMutating: boolean;
@@ -38,6 +39,7 @@ export function HabitList({
   editingHabit,
   editErrorMessage,
   errorMessage,
+  hasActiveFilters,
   habits,
   isLoading,
   isMutating,
@@ -69,6 +71,14 @@ export function HabitList({
   }
 
   if (habits.length === 0) {
+    if (hasActiveFilters) {
+      return (
+        <EmptyState icon={ListPlus} title="No habits match your filters.">
+          Try a different search term or clear filters to see every habit.
+        </EmptyState>
+      );
+    }
+
     return (
       <EmptyState icon={ListPlus} title="No habits yet.">
         Create your first habit to start tracking progress.

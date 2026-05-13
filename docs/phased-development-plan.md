@@ -693,7 +693,7 @@ Tasks:
 3. Add visible hover/focus states.
 4. Ensure forms are usable on small screens.
 5. Add consistent spacing and typography.
-6. Keep light theme only.
+6. Keep existing dark/light theme support, with dark mode as the default.
 
 Tests:
 

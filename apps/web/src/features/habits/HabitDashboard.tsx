@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   CreateHabitRequest,
   HabitResponse,
   HabitStatus,
+  ListHabitsRequest,
   UpdateHabitRequest,
 } from '@habit-tracker/shared';
 import { Activity, Archive, CirclePause, CirclePlus, ListChecks } from 'lucide-react';
@@ -16,6 +17,11 @@ import {
   undoTodayCheckIn,
   updateHabit,
 } from '../../lib/apiClient';
+import {
+  HabitFilters,
+  type CompletedTodayFilter,
+  type HabitStatusFilter,
+} from './HabitFilters';
 import { HabitForm } from './HabitForm';
 import { HabitList } from './HabitList';
 
@@ -33,19 +39,64 @@ export function HabitDashboard(): JSX.Element {
   const [formState, setFormState] = useState<FormState>(null);
   const [archivingHabitId, setArchivingHabitId] = useState<string | null>(null);
   const [deletingHabitId, setDeletingHabitId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<HabitStatusFilter>('');
+  const [completedTodayFilter, setCompletedTodayFilter] =
+    useState<CompletedTodayFilter>('');
+  const listRequestId = useRef(0);
+
+  useEffect(() => {
+    const debounceId = window.setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => window.clearTimeout(debounceId);
+  }, [search]);
+
+  const habitFilters = useMemo<ListHabitsRequest>(() => {
+    const filters: ListHabitsRequest = {};
+    const trimmedSearch = debouncedSearch.trim();
+
+    if (trimmedSearch) {
+      filters.search = trimmedSearch;
+    }
+
+    if (statusFilter) {
+      filters.status = statusFilter;
+    }
+
+    if (completedTodayFilter) {
+      filters.completedToday = completedTodayFilter === 'true';
+    }
+
+    return filters;
+  }, [completedTodayFilter, debouncedSearch, statusFilter]);
+
+  const hasActiveFilters =
+    search.trim() !== '' || statusFilter !== '' || completedTodayFilter !== '';
 
   const loadHabits = useCallback(async () => {
+    const requestId = listRequestId.current + 1;
+    listRequestId.current = requestId;
     setIsLoading(true);
     setListError(null);
     try {
-      const response = await listHabits();
-      setHabits(response.habits);
+      const response = await listHabits(habitFilters);
+
+      if (requestId === listRequestId.current) {
+        setHabits(response.habits);
+      }
     } catch (error) {
-      setListError(error instanceof Error ? error.message : 'Unable to load habits.');
+      if (requestId === listRequestId.current) {
+        setListError(error instanceof Error ? error.message : 'Unable to load habits.');
+      }
     } finally {
-      setIsLoading(false);
+      if (requestId === listRequestId.current) {
+        setIsLoading(false);
+      }
     }
-  }, []);
+  }, [habitFilters]);
 
   useEffect(() => {
     void loadHabits();
@@ -130,6 +181,21 @@ export function HabitDashboard(): JSX.Element {
   const pausedCount = habits.filter((habit) => habit.status === 'PAUSED').length;
   const archivedCount = habits.filter((habit) => habit.status === 'ARCHIVED').length;
 
+  function changeStatusFilter(value: HabitStatusFilter): void {
+    setStatusFilter(value);
+
+    if (value === 'PAUSED' || value === 'ARCHIVED') {
+      setCompletedTodayFilter('');
+    }
+  }
+
+  function clearFilters(): void {
+    setSearch('');
+    setDebouncedSearch('');
+    setStatusFilter('');
+    setCompletedTodayFilter('');
+  }
+
   return (
     <section className="grid gap-5" aria-label="Habit dashboard">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -155,6 +221,17 @@ export function HabitDashboard(): JSX.Element {
         <StatTile icon={Archive} label="Archived" value={archivedCount} />
       </div>
 
+      <HabitFilters
+        completedToday={completedTodayFilter}
+        hasActiveFilters={hasActiveFilters}
+        search={search}
+        status={statusFilter}
+        onClear={clearFilters}
+        onCompletedTodayChange={setCompletedTodayFilter}
+        onSearchChange={setSearch}
+        onStatusChange={changeStatusFilter}
+      />
+
       {formState?.mode === 'create' ? (
         <HabitForm
           mode="create"
@@ -172,6 +249,7 @@ export function HabitDashboard(): JSX.Element {
         archivingHabitId={archivingHabitId}
         deletingHabitId={deletingHabitId}
         errorMessage={listError}
+        hasActiveFilters={hasActiveFilters}
         habits={habits}
         isLoading={isLoading}
         isMutating={isMutating}

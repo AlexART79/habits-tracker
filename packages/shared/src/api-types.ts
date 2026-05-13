@@ -41,6 +41,12 @@ export type HabitListResponse = {
   habits: HabitResponse[];
 };
 
+export type ListHabitsRequest = {
+  search?: string;
+  status?: HabitStatus;
+  completedToday?: boolean;
+};
+
 export type CreateHabitRequest = {
   name: string;
   description?: string | null;

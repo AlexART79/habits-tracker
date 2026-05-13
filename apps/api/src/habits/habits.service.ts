@@ -14,6 +14,7 @@ import type {
 } from '@habit-tracker/shared';
 import { HABIT_STATUSES } from '@habit-tracker/shared';
 import type { Habit } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { getTodayCalendarDate } from '../streaks/calendar-date';
 import { calculateStreakSummary } from '../streaks/streak-calculator';
@@ -26,11 +27,46 @@ export class HabitsService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async list(userId: string, query: ListHabitsQueryDto): Promise<HabitListResponse> {
+    const completedToday = this.normalizeCompletedToday(query.completedToday);
+
+    if (query.status && !HABIT_STATUSES.includes(query.status)) {
+      throw new BadRequestException('Habit status is invalid.');
+    }
+
+    if (
+      completedToday !== undefined &&
+      query.status !== undefined &&
+      query.status !== 'ACTIVE'
+    ) {
+      throw new BadRequestException(
+        'Today completion filter can only be used with active habits.',
+      );
+    }
+
+    const today = getTodayCalendarDate();
+    const where: Prisma.HabitWhereInput = {
+      userId,
+      ...(query.search
+        ? {
+            OR: [
+              { name: { contains: query.search } },
+              { description: { contains: query.search } },
+            ],
+          }
+        : {}),
+      ...(query.status ? { status: query.status } : {}),
+      ...(completedToday !== undefined
+        ? {
+            status: 'ACTIVE',
+            checkIns: completedToday
+              ? { some: { userId, date: today } }
+              : { none: { userId, date: today } },
+          }
+        : {}),
+    };
+
     const habits = await this.prisma.habit.findMany({
-      where: {
-        userId,
-        ...(query.status ? { status: query.status } : {}),
-      },
+      where,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -135,6 +171,22 @@ export class HabitsService {
     }
 
     return status;
+  }
+
+  private normalizeCompletedToday(completedToday: unknown): boolean | undefined {
+    if (completedToday === undefined) {
+      return undefined;
+    }
+
+    if (completedToday === true || completedToday === 'true') {
+      return true;
+    }
+
+    if (completedToday === false || completedToday === 'false') {
+      return false;
+    }
+
+    throw new BadRequestException('Today completion filter must be true or false.');
   }
 
   private assertAllowedKeys(data: object, allowedKeys: string[]): void {
