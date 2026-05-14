@@ -715,11 +715,29 @@ describe('App endpoints', () => {
       });
     }
 
+    async function waitForAcknowledgedNotifications(count: number): Promise<void> {
+      const startedAt = Date.now();
+
+      while (Date.now() - startedAt < 1000) {
+        const acknowledgedCount = await prisma.milestoneNotification.count({
+          where: { acknowledgedAt: { not: null } },
+        });
+
+        if (acknowledgedCount === count) {
+          return;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+
+      throw new Error(`Timed out waiting for ${count} acknowledged notifications.`);
+    }
+
     it('rejects unauthenticated WebSocket connections', async () => {
       await expect(connectWebSocket()).rejects.toThrow(/WebSocket closed|Unexpected server response/);
     });
 
-    it('emits 3, 7, and 30 day milestones after subscribe and does not repeat them on reconnect', async () => {
+    it('emits 3, 7, and 30 day milestones after subscribe and keeps unacknowledged notifications on reconnect', async () => {
       const { cookie, userId } = await loginTestUser('milestone-owner');
       const threeDayHabit = await createHabitForUser(userId, 'Read');
       const sevenDayHabit = await createHabitForUser(userId, 'Walk');
@@ -775,10 +793,7 @@ describe('App endpoints', () => {
       socket.close();
 
       const reconnect = await connectWebSocket(cookie);
-      const repeatedMessage = Promise.race([
-        waitForMessage(reconnect),
-        new Promise((resolve) => setTimeout(() => resolve(null), 100)),
-      ]);
+      const reconnectMessages = collectMessages(reconnect, 3);
       reconnect.send(
         JSON.stringify({
           type: 'milestones.subscribe',
@@ -786,9 +801,49 @@ describe('App endpoints', () => {
         }),
       );
 
-      await expect(repeatedMessage).resolves.toBeNull();
+      const resentMessages = await reconnectMessages;
+      expect(resentMessages).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            payload: expect.objectContaining({ habitId: threeDayHabit.id }),
+          }),
+          expect.objectContaining({
+            payload: expect.objectContaining({ habitId: sevenDayHabit.id }),
+          }),
+          expect.objectContaining({
+            payload: expect.objectContaining({ habitId: thirtyDayHabit.id }),
+          }),
+        ]),
+      );
+
+      for (const message of resentMessages) {
+        const notificationId = (message as { payload: { notificationId: string } }).payload
+          .notificationId;
+        reconnect.send(
+          JSON.stringify({
+            type: 'notification.ack',
+            payload: { notificationId },
+          }),
+        );
+      }
+      await waitForAcknowledgedNotifications(3);
       reconnect.close();
-    });
+
+      const afterAckReconnect = await connectWebSocket(cookie);
+      const repeatedAfterAckMessage = Promise.race([
+        waitForMessage(afterAckReconnect),
+        new Promise((resolve) => setTimeout(() => resolve(null), 100)),
+      ]);
+      afterAckReconnect.send(
+        JSON.stringify({
+          type: 'milestones.subscribe',
+          payload: { clientTime: '2026-05-14T12:02:00.000Z' },
+        }),
+      );
+
+      await expect(repeatedAfterAckMessage).resolves.toBeNull();
+      afterAckReconnect.close();
+    }, 10000);
 
     it('acks only owned notifications', async () => {
       const owner = await loginTestUser('ack-owner');

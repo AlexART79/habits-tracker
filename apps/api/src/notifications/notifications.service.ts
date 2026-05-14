@@ -62,7 +62,16 @@ export class NotificationsService {
     });
 
     if (existing) {
-      return null;
+      if (existing.acknowledgedAt) {
+        return null;
+      }
+
+      return this.toMilestoneMessage(
+        habit,
+        existing,
+        milestone,
+        summary.currentStreak,
+      );
     }
 
     const notification = await this.prisma.milestoneNotification.create({
