@@ -9,7 +9,23 @@
       "Bash(Get-ChildItem -Path \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\")",
       "Bash(Select-Object Name)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git *)",
+      "Bash(Test-Path *)",
+      "PowerShell(New-Item *)",
+      "Bash(npm run *)",
+      "Bash(node *)",
+      "Bash(npm test *)",
+      "Bash(Remove-Item -Force \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\\\\App.css\" -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Force \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\\\\assets\\\\react.svg\" -ErrorAction SilentlyContinue)",
+      "Bash(Write-Host \"Done\")",
+      "Bash(New-Item -ItemType Directory -Force \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\api\\\\src\\\\prisma\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"Done\")",
+      "PowerShell(npm run *)",
+      "Bash(findstr /i \".env .db\")",
+      "Bash(findstr -i \".env\")",
+      "Bash(findstr -i \".db\")"
     ]
   }
 }
