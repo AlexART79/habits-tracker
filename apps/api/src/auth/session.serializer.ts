@@ -15,11 +15,11 @@ export class SessionSerializer extends PassportSerializer {
 
   async deserializeUser(
     id: string,
-    done: (err: Error | null, user: User | null) => void,
+    done: (err: Error | null, user: User | false | null) => void,
   ): Promise<void> {
     try {
       const user = await this.prisma.user.findUnique({ where: { id } });
-      done(null, user);
+      done(null, user ?? false);
     } catch (err) {
       done(err as Error, null);
     }
