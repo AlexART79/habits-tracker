@@ -58,7 +58,12 @@ describe('Auth (e2e)', () => {
       const agent = supertest.agent(app.getHttpServer());
       const login = await agent
         .post('/auth/test-login')
-        .send({ provider: 'test', providerUserId: 'me-test-1', email: 'me@example.com', displayName: 'Me' })
+        .send({
+          provider: 'test',
+          providerUserId: 'me-test-1',
+          email: 'me@example.com',
+          displayName: 'Me',
+        })
         .expect(200);
 
       const me = await agent.get('/auth/me').expect(200);
@@ -70,7 +75,12 @@ describe('Auth (e2e)', () => {
       const agent = supertest.agent(app.getHttpServer());
       await agent
         .post('/auth/test-login')
-        .send({ provider: 'test', providerUserId: 'me-test-2', email: 'x@example.com', displayName: 'X' })
+        .send({
+          provider: 'test',
+          providerUserId: 'me-test-2',
+          email: 'x@example.com',
+          displayName: 'X',
+        })
         .expect(200);
 
       await agent.get('/auth/me').expect(200);

@@ -29,7 +29,24 @@
       "Bash(npm install *)",
       "Bash(Get-ChildItem -Path \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Recurse -Directory)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Sort-Object)"
+      "Bash(Sort-Object)",
+      "Bash(npm ls *)",
+      "Bash(npm view *)",
+      "Bash(New-Item -ItemType Directory -Force \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\api\\\\src\\\\auth\")",
+      "Bash(Write-Host \"Directory created\")",
+      "Bash(npx jest *)",
+      "Bash(git show *)",
+      "Bash(cat apps/api/test/jest-e2e.json)",
+      "Bash(cat apps/api/jest.config.js)",
+      "Bash(cat apps/api/jest.config.ts)",
+      "Bash(New-Item -ItemType Directory -Path \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\api\\\\src\\\\auth\\\\strategies\" -Force)",
+      "Bash(Write-Output \"Directory created\")",
+      "Bash(Select-String \"github\")",
+      "Bash(npx vitest *)",
+      "Bash(cat apps/web/vite.config.ts)",
+      "Bash(cat apps/web/vite.config.js)",
+      "Bash(cat apps/web/vitest.config.ts)",
+      "Bash(cat apps/web/vitest.config.js)"
     ]
   }
 }
