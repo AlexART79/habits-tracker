@@ -18,11 +18,13 @@ describe('Button', () => {
 
   it('renders primary variant by default with blue background class', () => {
     render(<Button>Primary</Button>);
+    // JSDOM doesn't apply CSS; checking class presence is the pragmatic alternative
     expect(screen.getByRole('button', { name: /primary/i })).toHaveClass('bg-blue-600');
   });
 
   it('renders secondary variant with white background class', () => {
     render(<Button variant="secondary">Secondary</Button>);
+    // JSDOM doesn't apply CSS; checking class presence is the pragmatic alternative
     expect(screen.getByRole('button', { name: /secondary/i })).toHaveClass('bg-white');
   });
 

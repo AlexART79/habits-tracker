@@ -15,6 +15,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 export function Button({ variant = 'primary', children, className = '', disabled, ...props }: ButtonProps) {
   return (
     <button
+      type="button"
       disabled={disabled}
       className={[
         'inline-flex items-center justify-center px-4 py-2 rounded-md border text-sm font-medium',
