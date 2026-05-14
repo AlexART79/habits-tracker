@@ -25,7 +25,11 @@
       "PowerShell(npm run *)",
       "Bash(findstr /i \".env .db\")",
       "Bash(findstr -i \".env\")",
-      "Bash(findstr -i \".db\")"
+      "Bash(findstr -i \".db\")",
+      "Bash(npm install *)",
+      "Bash(Get-ChildItem -Path \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)"
     ]
   }
 }
