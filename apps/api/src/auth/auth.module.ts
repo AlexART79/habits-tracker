@@ -6,11 +6,12 @@ import { AuthController } from './auth.controller';
 import { SessionSerializer } from './session.serializer';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
 import { TestEnvGuard } from './guards/test-env.guard';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [PrismaModule, PassportModule.register({ session: true })],
   controllers: [AuthController],
-  providers: [AuthService, SessionSerializer, AuthenticatedGuard, TestEnvGuard],
+  providers: [AuthService, SessionSerializer, AuthenticatedGuard, TestEnvGuard, GoogleStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Req, UseGuards, Body, HttpCode } from '@nestjs/common';
-import { Request } from 'express';
+import { Controller, Get, Post, Req, UseGuards, Body, HttpCode, Res } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { User } from '@prisma/client';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
 import { TestEnvGuard } from './guards/test-env.guard';
 import { AuthService } from './auth.service';
 import { TestLoginDto } from './dto/test-login.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
+
+const FRONTEND_URL = process.env['FRONTEND_URL'] ?? 'http://localhost:5175';
 
 @Controller('auth')
 export class AuthController {
@@ -55,5 +58,15 @@ export class AuthController {
     });
 
     return user;
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  googleLogin(): void {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleCallback(@Res() res: Response): void {
+    res.redirect(FRONTEND_URL);
   }
 }
