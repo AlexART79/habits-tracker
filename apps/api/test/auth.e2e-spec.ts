@@ -53,6 +53,30 @@ describe('Auth (e2e)', () => {
     it('returns 401 when not authenticated', async () => {
       await supertest(app.getHttpServer()).get('/auth/me').expect(401);
     });
+
+    it('returns the current user when authenticated', async () => {
+      const agent = supertest.agent(app.getHttpServer());
+      const login = await agent
+        .post('/auth/test-login')
+        .send({ provider: 'test', providerUserId: 'me-test-1', email: 'me@example.com', displayName: 'Me' })
+        .expect(200);
+
+      const me = await agent.get('/auth/me').expect(200);
+      expect(me.body.id).toBe(login.body.id);
+      expect(me.body.email).toBe('me@example.com');
+    });
+
+    it('returns 401 after logout', async () => {
+      const agent = supertest.agent(app.getHttpServer());
+      await agent
+        .post('/auth/test-login')
+        .send({ provider: 'test', providerUserId: 'me-test-2', email: 'x@example.com', displayName: 'X' })
+        .expect(200);
+
+      await agent.get('/auth/me').expect(200);
+      await agent.post('/auth/logout').expect(200);
+      await agent.get('/auth/me').expect(401);
+    });
   });
 
   describe('POST /auth/logout', () => {
