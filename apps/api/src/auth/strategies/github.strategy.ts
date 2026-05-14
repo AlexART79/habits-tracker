@@ -1,27 +1,27 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, Profile } from 'passport-google-oauth20';
+import { Strategy, Profile } from 'passport-github2';
 import { AuthService } from '../auth.service';
 
-interface GoogleStrategyConfig {
+interface GitHubStrategyConfig {
   clientID: string;
   clientSecret: string;
   callbackURL: string;
 }
 
 @Injectable()
-export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
+export class GitHubStrategy extends PassportStrategy(Strategy, 'github') {
   constructor(
     private readonly authService: AuthService,
-    @Optional() config?: GoogleStrategyConfig,
+    @Optional() config?: GitHubStrategyConfig,
   ) {
     super(
       config ?? {
-        clientID: process.env['GOOGLE_CLIENT_ID'] ?? 'placeholder',
-        clientSecret: process.env['GOOGLE_CLIENT_SECRET'] ?? 'placeholder',
+        clientID: process.env['GITHUB_CLIENT_ID'] ?? 'placeholder',
+        clientSecret: process.env['GITHUB_CLIENT_SECRET'] ?? 'placeholder',
         callbackURL:
-          process.env['GOOGLE_CALLBACK_URL'] ?? 'http://localhost:3002/auth/google/callback',
-        scope: ['email', 'profile'],
+          process.env['GITHUB_CALLBACK_URL'] ?? 'http://localhost:3002/auth/github/callback',
+        scope: ['user:email'],
       },
     );
   }
@@ -34,10 +34,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   ): Promise<void> {
     try {
       const user = await this.authService.upsertUser({
-        provider: 'google',
+        provider: 'github',
         providerUserId: profile.id,
         email: profile.emails?.[0]?.value ?? null,
-        displayName: profile.displayName ?? null,
+        displayName: profile.displayName ?? (profile as any).username ?? null,
         avatarUrl: profile.photos?.[0]?.value ?? null,
       });
       done(null, user);

@@ -69,4 +69,14 @@ export class AuthController {
   googleCallback(@Res() res: Response): void {
     res.redirect(FRONTEND_URL);
   }
+
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  githubLogin(): void {}
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  githubCallback(@Res() res: Response): void {
+    res.redirect(FRONTEND_URL);
+  }
 }
