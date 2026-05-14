@@ -3,7 +3,7 @@ import { Injectable, CanActivate, ForbiddenException } from '@nestjs/common';
 @Injectable()
 export class TestEnvGuard implements CanActivate {
   canActivate(): boolean {
-    const env = process.env['APP_ENV'] ?? process.env['NODE_ENV'];
+    const env = process.env['NODE_ENV'];
     if (env === 'test' || env === 'development') {
       return true;
     }
