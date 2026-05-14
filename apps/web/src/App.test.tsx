@@ -48,6 +48,15 @@ describe('App', () => {
     });
   }
 
+  function createDeferredResponse() {
+    let resolve!: (response: Response) => void;
+    const promise = new Promise<Response>((promiseResolve) => {
+      resolve = promiseResolve;
+    });
+
+    return { promise, resolve };
+  }
+
   it('shows sign-in status while auth state is loading', () => {
     mockFetch.mockReturnValue(new Promise(() => undefined));
 
@@ -299,6 +308,48 @@ describe('App', () => {
     });
     expect(await screen.findByRole('button', { name: 'Undo check-in Read daily' })).toBeInTheDocument();
     expect(screen.getAllByText('1').length).toBeGreaterThan(0);
+  });
+
+  it('keeps the current habit list mounted while an action refreshes habits', async () => {
+    const checkedHabit = {
+      ...activeHabit,
+      completedToday: true,
+      currentStreak: 1,
+      totalCheckIns: 6,
+    };
+    const refreshResponse = createDeferredResponse();
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [activeHabit] }))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            checkIn: {
+              id: 'check-in-1',
+              habitId: 'habit-1',
+              date: '2026-05-14',
+              createdAt: '2026-05-14T12:00:00.000Z',
+            },
+            habit: checkedHabit,
+          },
+          201,
+        ),
+      )
+      .mockReturnValueOnce(refreshResponse.promise);
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Check in Read daily' }));
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/habits', { credentials: 'include' });
+    });
+
+    expect(screen.getByText('Read daily')).toBeInTheDocument();
+    expect(screen.queryByText('Loading habits...')).not.toBeInTheDocument();
+
+    refreshResponse.resolve(jsonResponse({ habits: [checkedHabit] }));
+    expect(await screen.findByRole('button', { name: 'Undo check-in Read daily' })).toBeInTheDocument();
   });
 
   it('undoes today check-in and refreshes to the check-in state', async () => {

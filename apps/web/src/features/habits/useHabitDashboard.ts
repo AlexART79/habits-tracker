@@ -29,11 +29,12 @@ export function useHabitDashboard() {
   const [archivingHabitId, setArchivingHabitId] = useState<string | null>(null);
   const [deletingHabitId, setDeletingHabitId] = useState<string | null>(null);
   const listRequestId = useRef(0);
+  const hasLoadedHabits = useRef(false);
 
   const loadHabits = useCallback(async () => {
     const requestId = listRequestId.current + 1;
     listRequestId.current = requestId;
-    setIsLoading(true);
+    setIsLoading(!hasLoadedHabits.current);
     setListError(null);
 
     try {
@@ -41,10 +42,12 @@ export function useHabitDashboard() {
 
       if (requestId === listRequestId.current) {
         setHabits(response.habits);
+        hasLoadedHabits.current = true;
       }
     } catch (error) {
       if (requestId === listRequestId.current) {
         setListError(error instanceof Error ? error.message : HABIT_COPY.unableToLoadHabits);
+        hasLoadedHabits.current = true;
       }
     } finally {
       if (requestId === listRequestId.current) {
