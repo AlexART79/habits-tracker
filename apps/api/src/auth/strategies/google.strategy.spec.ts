@@ -80,6 +80,7 @@ describe('GoogleStrategy', () => {
       displayName: 'No Email',
       avatarUrl: null,
     });
+    expect(done).toHaveBeenCalledWith(null, mockUser);
   });
 
   it('calls done with error when upsertUser throws', async () => {
