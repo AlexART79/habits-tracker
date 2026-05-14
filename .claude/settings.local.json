@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Recurse -Force)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(npm *)",
+      "Bash(Get-ChildItem -Path \"E:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\")",
+      "Bash(Select-Object Name)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
