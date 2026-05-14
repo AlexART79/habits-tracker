@@ -7,6 +7,7 @@ export const DEBUG_HABIT_SEED_NAMES = [
   'Seed: 3-day current streak',
   'Seed: 7-day current streak',
   'Seed: 30-day milestone streak',
+  'Seed: Click today for 7-day milestone',
   'Seed: Broken streak history',
   'Seed: Paused habit with history',
   'Seed: Archived habit with history',
@@ -59,6 +60,13 @@ function buildDebugHabits(): DebugHabitSeed[] {
       description: 'Debug data: 30 consecutive completions ending today.',
       status: 'ACTIVE',
       dayOffsets: Array.from({ length: 30 }, (_, index) => -index),
+    },
+    {
+      name: 'Seed: Click today for 7-day milestone',
+      description:
+        'Debug data: six consecutive prior completions; check in today to reach 7 days.',
+      status: 'ACTIVE',
+      dayOffsets: [-1, -2, -3, -4, -5, -6],
     },
     {
       name: 'Seed: Broken streak history',

@@ -1,15 +1,19 @@
 import 'reflect-metadata';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
+import type { AddressInfo } from 'node:net';
 import request from 'supertest';
+import WebSocket from 'ws';
 import { configureApp } from '../src/app.setup';
 import { AppModule } from '../src/app.module';
+import { NotificationsWebSocketServer } from '../src/notifications/notifications-websocket.server';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { cleanDatabase } from './database';
 
 describe('App endpoints', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let baseUrl: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -19,7 +23,10 @@ describe('App endpoints', () => {
     app = moduleRef.createNestApplication();
     configureApp(app);
     prisma = moduleRef.get(PrismaService);
-    await app.init();
+    await app.listen(0);
+    moduleRef.get(NotificationsWebSocketServer).attach(app.getHttpServer());
+    const address = app.getHttpServer().address() as AddressInfo;
+    baseUrl = `http://127.0.0.1:${address.port}`;
   });
 
   afterAll(async () => {
@@ -591,6 +598,236 @@ describe('App endpoints', () => {
       const habit = await createHabit(agent);
 
       await agent.get(`/api/habits/${habit.id}/check-ins?month=2026-5`).expect(400);
+    });
+  });
+
+  describe('milestone WebSocket notifications', () => {
+    beforeEach(async () => {
+      await cleanDatabase(prisma);
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(prisma);
+    });
+
+    async function loginTestUser(providerUserId: string) {
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/test-login')
+        .send({
+          provider: 'test',
+          providerUserId,
+          email: `${providerUserId}@example.com`,
+          displayName: providerUserId,
+          avatarUrl: null,
+        })
+        .expect(201);
+
+      const setCookieHeader = response.headers['set-cookie'];
+      const cookies = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : setCookieHeader
+          ? [setCookieHeader]
+          : [];
+
+      return {
+        cookie: cookies.map((cookie) => cookie.split(';')[0]).join('; '),
+        userId: response.body.user.id as string,
+      };
+    }
+
+    async function createHabitForUser(userId: string, name: string) {
+      return prisma.habit.create({
+        data: {
+          userId,
+          name,
+          description: null,
+          startDate: '2026-05-01',
+          status: 'ACTIVE',
+        },
+      });
+    }
+
+    function previousCalendarDate(date: string, daysBack: number): string {
+      const [yearText, monthText, dayText] = date.split('-');
+      const dateValue = new Date(
+        Date.UTC(Number(yearText), Number(monthText) - 1, Number(dayText) - daysBack),
+      );
+
+      return dateValue.toISOString().slice(0, 10);
+    }
+
+    function today(): string {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: process.env.APP_TIMEZONE ?? 'UTC',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date());
+    }
+
+    async function seedStreak(userId: string, habitId: string, length: number): Promise<void> {
+      for (let offset = length - 1; offset >= 0; offset -= 1) {
+        await prisma.checkIn.create({
+          data: {
+            userId,
+            habitId,
+            date: previousCalendarDate(today(), offset),
+          },
+        });
+      }
+    }
+
+    function connectWebSocket(cookie?: string): Promise<WebSocket> {
+      return new Promise((resolve, reject) => {
+        const socket = new WebSocket(baseUrl.replace('http', 'ws') + '/ws', {
+          headers: cookie ? { Cookie: cookie } : undefined,
+        });
+
+        socket.on('open', () => resolve(socket));
+        socket.on('error', reject);
+        socket.on('close', (code) => {
+          if (code !== 1000) {
+            reject(new Error(`WebSocket closed with ${code}`));
+          }
+        });
+      });
+    }
+
+    function waitForMessage(socket: WebSocket): Promise<unknown> {
+      return new Promise((resolve) => {
+        socket.once('message', (message) => {
+          resolve(JSON.parse(message.toString()) as unknown);
+        });
+      });
+    }
+
+    function collectMessages(socket: WebSocket, count: number): Promise<unknown[]> {
+      return new Promise((resolve) => {
+        const messages: unknown[] = [];
+
+        socket.on('message', (message) => {
+          messages.push(JSON.parse(message.toString()) as unknown);
+
+          if (messages.length === count) {
+            resolve(messages);
+          }
+        });
+      });
+    }
+
+    it('rejects unauthenticated WebSocket connections', async () => {
+      await expect(connectWebSocket()).rejects.toThrow(/WebSocket closed|Unexpected server response/);
+    });
+
+    it('emits 3, 7, and 30 day milestones after subscribe and does not repeat them on reconnect', async () => {
+      const { cookie, userId } = await loginTestUser('milestone-owner');
+      const threeDayHabit = await createHabitForUser(userId, 'Read');
+      const sevenDayHabit = await createHabitForUser(userId, 'Walk');
+      const thirtyDayHabit = await createHabitForUser(userId, 'Journal');
+      const unreachedHabit = await createHabitForUser(userId, 'Stretch');
+
+      await seedStreak(userId, threeDayHabit.id, 3);
+      await seedStreak(userId, sevenDayHabit.id, 7);
+      await seedStreak(userId, thirtyDayHabit.id, 30);
+      await seedStreak(userId, unreachedHabit.id, 2);
+
+      const socket = await connectWebSocket(cookie);
+      const messages = collectMessages(socket, 3);
+      socket.send(
+        JSON.stringify({
+          type: 'milestones.subscribe',
+          payload: { clientTime: '2026-05-14T12:00:00.000Z' },
+        }),
+      );
+
+      await expect(messages).resolves.toEqual(
+        expect.arrayContaining([
+          {
+            type: 'milestone.reached',
+            payload: expect.objectContaining({
+              habitId: threeDayHabit.id,
+              habitName: 'Read',
+              milestone: 3,
+              currentStreak: 3,
+            }),
+          },
+          {
+            type: 'milestone.reached',
+            payload: expect.objectContaining({
+              habitId: sevenDayHabit.id,
+              habitName: 'Walk',
+              milestone: 7,
+              currentStreak: 7,
+            }),
+          },
+          {
+            type: 'milestone.reached',
+            payload: expect.objectContaining({
+              habitId: thirtyDayHabit.id,
+              habitName: 'Journal',
+              milestone: 30,
+              currentStreak: 30,
+            }),
+          },
+        ]),
+      );
+      expect(await prisma.milestoneNotification.count()).toBe(3);
+      socket.close();
+
+      const reconnect = await connectWebSocket(cookie);
+      const repeatedMessage = Promise.race([
+        waitForMessage(reconnect),
+        new Promise((resolve) => setTimeout(() => resolve(null), 100)),
+      ]);
+      reconnect.send(
+        JSON.stringify({
+          type: 'milestones.subscribe',
+          payload: { clientTime: '2026-05-14T12:01:00.000Z' },
+        }),
+      );
+
+      await expect(repeatedMessage).resolves.toBeNull();
+      reconnect.close();
+    });
+
+    it('acks only owned notifications', async () => {
+      const owner = await loginTestUser('ack-owner');
+      const other = await loginTestUser('ack-other');
+      const ownerHabit = await createHabitForUser(owner.userId, 'Read');
+      const otherHabit = await createHabitForUser(other.userId, 'Private');
+      const ownerNotification = await prisma.milestoneNotification.create({
+        data: { userId: owner.userId, habitId: ownerHabit.id, milestone: 3 },
+      });
+      const otherNotification = await prisma.milestoneNotification.create({
+        data: { userId: other.userId, habitId: otherHabit.id, milestone: 3 },
+      });
+
+      const socket = await connectWebSocket(owner.cookie);
+      socket.send(
+        JSON.stringify({
+          type: 'notification.ack',
+          payload: { notificationId: ownerNotification.id },
+        }),
+      );
+      socket.send(
+        JSON.stringify({
+          type: 'notification.ack',
+          payload: { notificationId: otherNotification.id },
+        }),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      await expect(
+        prisma.milestoneNotification.findUniqueOrThrow({
+          where: { id: ownerNotification.id },
+        }),
+      ).resolves.toMatchObject({ acknowledgedAt: expect.any(Date) });
+      await expect(
+        prisma.milestoneNotification.findUniqueOrThrow({
+          where: { id: otherNotification.id },
+        }),
+      ).resolves.toMatchObject({ acknowledgedAt: null });
+      socket.close();
     });
   });
 });

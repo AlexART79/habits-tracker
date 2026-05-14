@@ -5,6 +5,7 @@ import {
   DEBUG_HABIT_SEED_NAMES,
   seedHabitDebugData,
 } from './habitDebugData';
+import { getTodayCalendarDate } from '../streaks/calendar-date';
 
 describe('seedHabitDebugData', () => {
   const prisma = new PrismaClient();
@@ -52,8 +53,8 @@ describe('seedHabitDebugData', () => {
     expect(firstRun).toEqual(secondRun);
     expect(secondRun).toEqual({
       userId,
-      habitsCreated: 6,
-      checkInsCreated: 57,
+      habitsCreated: 7,
+      checkInsCreated: 63,
     });
 
     const seededHabits = await prisma.habit.findMany({
@@ -66,11 +67,20 @@ describe('seedHabitDebugData', () => {
       include: { checkIns: true },
     });
 
-    expect(seededHabits).toHaveLength(6);
+    expect(seededHabits).toHaveLength(7);
     expect(seededHabits.map((habit) => habit.name).sort()).toEqual(
       [...DEBUG_HABIT_SEED_NAMES].sort(),
     );
-    expect(seededHabits.reduce((total, habit) => total + habit.checkIns.length, 0)).toBe(57);
+    expect(seededHabits.reduce((total, habit) => total + habit.checkIns.length, 0)).toBe(63);
+
+    const clickToSevenHabit = seededHabits.find(
+      (habit) => habit.name === 'Seed: Click today for 7-day milestone',
+    );
+
+    expect(clickToSevenHabit?.checkIns).toHaveLength(6);
+    expect(clickToSevenHabit?.checkIns.some((checkIn) => checkIn.date === getTodayCalendarDate())).toBe(
+      false,
+    );
     expect(otherUserHabits).toHaveLength(1);
     expect(otherUserHabits[0]?.name).toBe(DEBUG_HABIT_SEED_NAMES[0]);
   });

@@ -1,5 +1,6 @@
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
 import session from 'express-session';
+import type { RequestHandler } from 'express';
 
 function getSessionSecret(): string {
   const secret = process.env.SESSION_SECRET;
@@ -21,7 +22,20 @@ export function configureApp(app: INestApplication): void {
     origin: process.env.WEB_ORIGIN ?? 'http://localhost:5174',
     credentials: true,
   });
-  app.use(
+  app.use(getSessionMiddleware());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+}
+
+let sessionMiddleware: RequestHandler | null = null;
+
+export function getSessionMiddleware(): RequestHandler {
+  sessionMiddleware ??=
     session({
       name: 'habit_tracker_session',
       secret: getSessionSecret(),
@@ -32,13 +46,7 @@ export function configureApp(app: INestApplication): void {
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
       },
-    }),
-  );
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+    });
+
+  return sessionMiddleware;
 }

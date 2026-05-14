@@ -1,4 +1,4 @@
-import type { AuthProvider, HabitStatus } from './constants.js';
+import type { AuthProvider, HabitStatus, MilestoneDay } from './constants.js';
 
 export type HealthResponse = {
   status: 'ok';
@@ -84,3 +84,34 @@ export type UndoCheckInResponse = {
   ok: true;
   habit: HabitResponse;
 };
+
+export type MilestonesSubscribeMessage = {
+  type: 'milestones.subscribe';
+  payload: {
+    clientTime: string;
+  };
+};
+
+export type MilestoneReachedMessage = {
+  type: 'milestone.reached';
+  payload: {
+    notificationId: string;
+    habitId: string;
+    habitName: string;
+    milestone: MilestoneDay;
+    currentStreak: number;
+  };
+};
+
+export type NotificationAckMessage = {
+  type: 'notification.ack';
+  payload: {
+    notificationId: string;
+  };
+};
+
+export type ClientWebSocketMessage =
+  | MilestonesSubscribeMessage
+  | NotificationAckMessage;
+
+export type ServerWebSocketMessage = MilestoneReachedMessage;

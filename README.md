@@ -4,7 +4,7 @@ A full-stack TypeScript habit tracker for building routines, tracking daily chec
 
 ## Project Status
 
-Current status: Phase 4 search, filters, and responsive UI hardening.
+Current status: Phase 5 WebSocket milestone notifications.
 
 Implemented now:
 
@@ -24,8 +24,8 @@ Implemented now:
 - Current-month check-in history for each habit
 - Habit search by name/description, status filtering, and completed-today filtering
 - Responsive habit filter controls and filtered-results empty states
-
-Planned later phases add WebSocket milestone notifications.
+- Authenticated WebSocket milestone notifications for 3, 7, and 30 day streaks
+- Notification dismiss actions that acknowledge milestones on the server
 
 ## Stack
 
@@ -94,18 +94,20 @@ npm run prisma:migrate -w apps/api
 
 With `DATABASE_URL=file:./dev.db`, Prisma stores the local database at `apps/api/prisma/dev.db`.
 
-Seed reusable habit/check-in data for manual streak testing:
+Seed reusable habit/check-in data for manual streak and notification testing:
 
 ```powershell
 npm run seed
 ```
 
-The seed targets user `cmp49ummz0000jiqbx6uq6c6j` by default and recreates only its debug habits. To target another existing user for local debugging, set `SEED_USER_ID` first:
+The seed targets user `cmp49ummz0000jiqbx6uq6c6j` by default and recreates only its debug habits. It includes `Seed: Click today for 7-day milestone`, which has six consecutive prior check-ins and no check-in for today. To target another existing user for local debugging, set `SEED_USER_ID` first:
 
 ```powershell
 $env:SEED_USER_ID = "existing-user-id"
 npm run seed
 ```
+
+For manual WebSocket notification verification, sign in as the seeded user, check in `Seed: Click today for 7-day milestone`, then refresh the app to reconnect the socket. The 7-day milestone notification should appear near the top of the dashboard and remain visible until dismissed; dismissing it sends `notification.ack`.
 
 Windows troubleshooting: if `prisma migrate dev` fails with a blank schema-engine error, the local database may not have been created or migrated. The committed initial migration SQL is present under `apps/api/prisma/migrations`, but `npm run prisma:generate -w apps/api` only regenerates the Prisma client. Use `npm run typecheck`, `npm run lint`, and `npm test` to validate the code path, then rerun or fix migration before relying on the local runtime database.
 
@@ -146,6 +148,8 @@ Run the frontend only:
 ```powershell
 npm run dev -w apps/web
 ```
+
+In local development, the Vite server proxies `/api` and `/ws` to the backend on port `3001`.
 
 ## Quality Commands
 
@@ -312,7 +316,7 @@ Rules:
 
 ## WebSocket Message Format
 
-WebSocket milestone notifications are planned for Phase 5.
+WebSocket milestone notifications use a raw WebSocket connection at `/ws`. When running through the local frontend dev server, the browser connects to `ws://localhost:5174/ws` and Vite proxies it to the backend. Direct backend connections use `ws://localhost:3001/ws`.
 
 Client to server:
 
@@ -351,13 +355,13 @@ Server to client:
 }
 ```
 
-WebSocket authorization is mandatory. The server must never send one user's notifications to another user.
+WebSocket authorization uses the same `habit_tracker_session` cookie as HTTP auth. Unauthenticated sockets are rejected, and the server must never send one user's notifications to another user.
 
 ## Milestone Notification Rules
 
 Milestones are `3`, `7`, and `30` day streaks.
 
-Notifications are evaluated when the WebSocket connection opens, sent after the client subscribes with `milestones.subscribe`, and stored once per habit per milestone. A stored milestone notification must not repeat on reconnect. `notification.ack` records that the notification was acknowledged.
+Notifications are evaluated when the WebSocket connection opens, sent after the client subscribes with `milestones.subscribe`, and stored once per habit per milestone. Unacknowledged stored notifications are sent again on reconnect so the UI can keep showing them until the user dismisses them. The current UI sends `notification.ack` when the user dismisses the visible notification, and acknowledged notifications are not sent again.
 
 ## Streak Notes
 

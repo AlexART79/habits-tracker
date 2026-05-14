@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -6,10 +6,40 @@ import { App } from './App';
 
 const mockFetch = vi.fn<typeof fetch>();
 
+class MockWebSocket {
+  static instances: MockWebSocket[] = [];
+
+  readonly sentMessages: string[] = [];
+  onopen: (() => void) | null = null;
+  onmessage: ((event: MessageEvent<string>) => void) | null = null;
+
+  constructor(readonly url: string) {
+    MockWebSocket.instances.push(this);
+  }
+
+  send(message: string): void {
+    this.sentMessages.push(message);
+  }
+
+  close(): void {
+    return undefined;
+  }
+
+  open(): void {
+    this.onopen?.();
+  }
+
+  receive(message: unknown): void {
+    this.onmessage?.({ data: JSON.stringify(message) } as MessageEvent<string>);
+  }
+}
+
 beforeEach(() => {
   vi.useRealTimers();
   mockFetch.mockReset();
   vi.stubGlobal('fetch', mockFetch);
+  vi.stubGlobal('WebSocket', MockWebSocket);
+  MockWebSocket.instances = [];
   localStorage.clear();
   document.documentElement.className = '';
   document.documentElement.removeAttribute('data-theme');
@@ -97,6 +127,70 @@ describe('App', () => {
     expect(themeToggle).toBeInTheDocument();
     expect(themeToggle).not.toHaveTextContent('Light');
     expect(await screen.findByText('No habits yet.')).toBeInTheDocument();
+  });
+
+  it('connects to milestone notifications and subscribes after authentication', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [] }));
+
+    render(<App />);
+
+    await screen.findByText('Ada Lovelace');
+    expect(MockWebSocket.instances).toHaveLength(1);
+    expect(MockWebSocket.instances[0]?.url).toBe('ws://localhost:3000/ws');
+
+    MockWebSocket.instances[0]?.open();
+
+    expect(MockWebSocket.instances[0]?.sentMessages).toEqual([
+      expect.stringContaining('"type":"milestones.subscribe"'),
+    ]);
+  });
+
+  it('renders milestone notifications and acks them on dismiss', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(authResponse))
+      .mockResolvedValueOnce(jsonResponse({ habits: [] }));
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await screen.findByText('Ada Lovelace');
+    const socket = MockWebSocket.instances[0];
+    socket?.open();
+    act(() => {
+      socket?.receive({
+        type: 'milestone.reached',
+        payload: {
+          notificationId: 'notification-1',
+          habitId: 'habit-1',
+          habitName: 'Read daily',
+          milestone: 7,
+          currentStreak: 7,
+        },
+      });
+    });
+
+    expect(await screen.findByText('Read daily reached a 7-day streak.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Dismiss Read daily milestone' }));
+
+    expect(socket?.sentMessages).toContain(
+      JSON.stringify({
+        type: 'notification.ack',
+        payload: { notificationId: 'notification-1' },
+      }),
+    );
+    expect(screen.queryByText('Read daily reached a 7-day streak.')).not.toBeInTheDocument();
+  });
+
+  it('does not connect to milestone notifications while unauthenticated', async () => {
+    mockFetch.mockResolvedValue(new Response(null, { status: 401 }));
+
+    render(<App />);
+
+    expect(await screen.findByRole('link', { name: 'Continue with Google' })).toBeInTheDocument();
+    expect(MockWebSocket.instances).toEqual([]);
   });
 
   it('renders the authenticated header as a distinct sticky top bar', async () => {

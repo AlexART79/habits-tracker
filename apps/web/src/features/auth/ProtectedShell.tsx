@@ -1,4 +1,5 @@
 import { HabitDashboard } from '../habits/HabitDashboard';
+import { MilestoneNotifications } from '../notifications/MilestoneNotifications';
 import { getThemeToggleLabel } from '../theme/themeUtils';
 import { useTheme } from '../theme/useTheme';
 import { ProtectedShellHeader } from './ProtectedShellHeader';
@@ -21,6 +22,7 @@ export function ProtectedShell(): JSX.Element {
       <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
         {errorMessage ? <ShellErrorBanner message={errorMessage} /> : null}
 
+        <MilestoneNotifications />
         <HabitDashboard />
       </div>
     </main>
