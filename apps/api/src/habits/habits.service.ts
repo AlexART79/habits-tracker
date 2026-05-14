@@ -70,7 +70,7 @@ export class HabitsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return { habits: await this.toResponses(habits) };
+    return { habits: await this.toResponses(this.sortHabitsByStatus(habits)) };
   }
 
   async create(userId: string, dto: CreateHabitDto): Promise<HabitResponse> {
@@ -196,6 +196,14 @@ export class HabitsService {
     if (unexpectedKey) {
       throw new BadRequestException(`Unexpected field: ${unexpectedKey}.`);
     }
+  }
+
+  private sortHabitsByStatus(habits: Habit[]): Habit[] {
+    return [...habits].sort(
+      (left: Habit, right: Habit) =>
+        HABIT_STATUSES.indexOf(left.status as HabitStatus) -
+        HABIT_STATUSES.indexOf(right.status as HabitStatus),
+    );
   }
 
   private async toResponses(habits: Habit[]): Promise<HabitResponse[]> {

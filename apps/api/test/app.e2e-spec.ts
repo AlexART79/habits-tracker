@@ -320,6 +320,32 @@ describe('App endpoints', () => {
       });
     });
 
+    it('lists habits by active, paused, then archived status', async () => {
+      const agent = await loginTestUser('habit-sort-owner');
+      const activeHabit = await createHabit(agent, 'Active habit');
+      const pausedHabit = await createHabit(agent, 'Paused habit');
+      const archivedHabit = await createHabit(agent, 'Archived habit');
+
+      await agent.patch(`/api/habits/${pausedHabit.id}`).send({ status: 'PAUSED' }).expect(200);
+      await agent
+        .patch(`/api/habits/${archivedHabit.id}`)
+        .send({ status: 'ARCHIVED' })
+        .expect(200);
+
+      const response = await agent.get('/api/habits').expect(200);
+
+      expect(response.body.habits.map((habit: { status: string }) => habit.status)).toEqual([
+        'ACTIVE',
+        'PAUSED',
+        'ARCHIVED',
+      ]);
+      expect(response.body.habits.map((habit: { id: string }) => habit.id)).toEqual([
+        activeHabit.id,
+        pausedHabit.id,
+        archivedHabit.id,
+      ]);
+    });
+
     it('filters habits by search text, status, and today check-in state without leaking other users data', async () => {
       const ownerAgent = await loginTestUser('filter-owner');
       const otherAgent = await loginTestUser('filter-other');
