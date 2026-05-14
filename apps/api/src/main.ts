@@ -11,7 +11,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  await app.listen(3002);
-  console.log('API running on http://localhost:3002');
+  await app.listen(process.env['PORT'] ?? 3002);
+  console.log(`API running on http://localhost:${process.env['PORT'] ?? 3002}`);
 }
 bootstrap();
