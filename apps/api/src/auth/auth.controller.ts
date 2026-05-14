@@ -21,6 +21,12 @@ export class AuthController {
         else resolve();
       });
     });
+    await new Promise<void>((resolve, reject) => {
+      req.session.destroy((err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
     return { message: 'Logged out' };
   }
 }

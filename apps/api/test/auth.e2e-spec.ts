@@ -19,7 +19,7 @@ async function buildApp(): Promise<INestApplication> {
       secret: 'test-secret',
       resave: false,
       saveUninitialized: false,
-      cookie: { httpOnly: true, secure: false },
+      cookie: { httpOnly: true, secure: false, sameSite: 'lax' as const },
     }),
   );
   app.use(passport.initialize());

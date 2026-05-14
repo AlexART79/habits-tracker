@@ -45,8 +45,13 @@ describe('AuthController', () => {
   describe('POST /auth/logout', () => {
     it('calls req.logout and returns success', async () => {
       const mockLogout = jest.fn((cb: () => void) => cb());
-      const result = await controller.logout({ logout: mockLogout } as any);
+      const mockDestroy = jest.fn((cb: () => void) => cb());
+      const result = await controller.logout({
+        logout: mockLogout,
+        session: { destroy: mockDestroy },
+      } as any);
       expect(mockLogout).toHaveBeenCalledTimes(1);
+      expect(mockDestroy).toHaveBeenCalledTimes(1);
       expect(result).toEqual({ message: 'Logged out' });
     });
   });
