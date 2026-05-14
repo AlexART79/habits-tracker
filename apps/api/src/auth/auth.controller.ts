@@ -1,11 +1,16 @@
-import { Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Req, UseGuards, Body, HttpCode } from '@nestjs/common';
 import { Request } from 'express';
 import { User } from '@prisma/client';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
+import { TestEnvGuard } from './guards/test-env.guard';
+import { AuthService } from './auth.service';
+import { TestLoginDto } from './dto/test-login.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
   @UseGuards(AuthenticatedGuard)
   @Get('me')
   me(@CurrentUser() user: User): User {
@@ -28,5 +33,27 @@ export class AuthController {
       });
     });
     return { message: 'Logged out' };
+  }
+
+  @UseGuards(TestEnvGuard)
+  @Post('test-login')
+  @HttpCode(200)
+  async testLogin(@Body() dto: TestLoginDto, @Req() req: Request): Promise<User> {
+    const user = await this.authService.upsertUser({
+      provider: dto.provider,
+      providerUserId: dto.providerUserId,
+      email: dto.email ?? null,
+      displayName: dto.displayName ?? null,
+      avatarUrl: null,
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      req.login(user, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+    return user;
   }
 }
