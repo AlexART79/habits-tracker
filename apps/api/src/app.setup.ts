@@ -1,6 +1,8 @@
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import session from 'express-session';
 import type { RequestHandler } from 'express';
+import { PrismaSessionStore } from './auth/prisma-session-store';
 
 function getSessionSecret(): string {
   const secret = process.env.SESSION_SECRET;
@@ -33,12 +35,20 @@ export function configureApp(app: INestApplication): void {
 }
 
 let sessionMiddleware: RequestHandler | null = null;
+let sessionStore: PrismaSessionStore | null = null;
+
+function getSessionStore(): PrismaSessionStore {
+  sessionStore ??= new PrismaSessionStore(new PrismaClient());
+
+  return sessionStore;
+}
 
 export function getSessionMiddleware(): RequestHandler {
   sessionMiddleware ??=
     session({
       name: 'habit_tracker_session',
       secret: getSessionSecret(),
+      store: getSessionStore(),
       resave: false,
       saveUninitialized: false,
       cookie: {

@@ -1,15 +1,12 @@
-import { rmSync, readFileSync } from 'node:fs';
-import { basename, resolve } from 'node:path';
+import { readdirSync, rmSync, readFileSync } from 'node:fs';
+import { basename, join, resolve } from 'node:path';
 import { PrismaClient } from '@prisma/client';
 
 const testDatabasePaths = [
   resolve(__dirname, '../test.db'),
   resolve(__dirname, '../prisma/test.db'),
 ];
-const migrationPath = resolve(
-  __dirname,
-  '../prisma/migrations/20260512231500_init/migration.sql',
-);
+const migrationsPath = resolve(__dirname, '../prisma/migrations');
 
 async function applyInitialMigration(): Promise<void> {
   process.env.DATABASE_URL = 'file:./test.db';
@@ -25,15 +22,22 @@ async function applyInitialMigration(): Promise<void> {
   }
 
   const prisma = new PrismaClient();
-  const migration = readFileSync(migrationPath, 'utf8');
-  const statements = migration
-    .split(';')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
+  const migrationFiles = readdirSync(migrationsPath, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join(migrationsPath, entry.name, 'migration.sql'))
+    .sort();
 
   try {
-    for (const statement of statements) {
-      await prisma.$executeRawUnsafe(statement);
+    for (const migrationFile of migrationFiles) {
+      const migration = readFileSync(migrationFile, 'utf8');
+      const statements = migration
+        .split(';')
+        .map((statement) => statement.trim())
+        .filter(Boolean);
+
+      for (const statement of statements) {
+        await prisma.$executeRawUnsafe(statement);
+      }
     }
   } finally {
     await prisma.$disconnect();

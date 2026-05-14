@@ -66,7 +66,7 @@ GITHUB_CLIENT_SECRET=
 GITHUB_CALLBACK_URL=http://localhost:3001/api/auth/github/callback
 ```
 
-Use a long random `SESSION_SECRET`. Keep `AUTH_TEST_MODE=true` for local development and automated tests only; the test login endpoint is blocked when `NODE_ENV=production`.
+Use a long random `SESSION_SECRET`. Keep `AUTH_TEST_MODE=true` for local development and automated tests only; the test login endpoint is blocked when `NODE_ENV=production`. Login sessions are stored in the SQLite database so a valid session cookie remains usable after the API server restarts.
 
 ## Database
 
@@ -82,7 +82,7 @@ Create or update the local SQLite database:
 npm run prisma:migrate
 ```
 
-With `DATABASE_URL=file:./dev.db`, Prisma stores the local database at `apps/api/prisma/dev.db`.
+With `DATABASE_URL=file:./dev.db`, Prisma stores the local database at `apps/api/prisma/dev.db`. The same database stores server-side session records, so run migrations after pulling schema changes.
 
 Seed reusable local habit and check-in data:
 
