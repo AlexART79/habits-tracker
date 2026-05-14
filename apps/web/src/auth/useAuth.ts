@@ -28,11 +28,13 @@ export function useAuth(): AuthState {
         if (cancelled) return;
         if (res.ok) {
           const user = (await res.json()) as AuthUser;
+          if (cancelled) return;
           setState({ user, loading: false, error: null });
         } else if (res.status === 401) {
           setState({ user: null, loading: false, error: null });
         } else {
           const body = await res.json().catch(() => ({}));
+          if (cancelled) return;
           setState({
             user: null,
             loading: false,
