@@ -4,7 +4,7 @@ export type BadgeTone = 'success' | 'warning' | 'neutral';
 
 export const BUTTON_VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
-    'border-emerald-500 bg-emerald-500 text-slate-950 hover:border-emerald-400 hover:bg-emerald-400 dark:border-emerald-400 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300',
+    'border-emerald-500 bg-emerald-600 text-white hover:border-emerald-500 hover:bg-emerald-500 dark:border-emerald-400 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300',
   secondary:
     'border-slate-300 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-800',
   danger:
@@ -14,8 +14,10 @@ export const BUTTON_VARIANT_CLASSES: Record<ButtonVariant, string> = {
 };
 
 export const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
-  success: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200 dark:text-emerald-200',
-  warning: 'border-amber-400/40 bg-amber-400/10 text-amber-200 dark:text-amber-200',
+  success:
+    'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-400/10 dark:text-emerald-200',
+  warning:
+    'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200',
   neutral:
     'border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300',
 };
@@ -27,8 +29,7 @@ export const COMPONENT_CLASSES = {
     'inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wide',
   button:
     'inline-flex min-h-11 items-center justify-center gap-2 rounded-md border px-4 font-bold transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-emerald-300 disabled:cursor-not-allowed disabled:opacity-60',
-  card:
-    'rounded-lg border border-slate-200 bg-white/90 shadow-sm shadow-slate-200/70 dark:border-slate-800 dark:bg-slate-950/75 dark:shadow-black/20',
+  card: 'rounded-lg border border-slate-200 bg-white/90 shadow-sm shadow-slate-200/70 dark:border-slate-800 dark:bg-slate-950/75 dark:shadow-black/20',
   emptyState:
     'rounded-lg border border-dashed border-slate-300 bg-white/80 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70',
   emptyStateIcon:
