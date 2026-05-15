@@ -1,6 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { HabitWithStats, HabitFilters } from './types';
+import type { HabitWithStats, HabitFilters, HabitStatus } from './types';
 import { fetchHabits } from './habitsApi';
+
+const STATUS_ORDER: Record<HabitStatus, number> = { ACTIVE: 0, PAUSED: 1, ARCHIVED: 2 };
+
+function sortHabits(habits: HabitWithStats[]): HabitWithStats[] {
+  return [...habits].sort((a, b) => {
+    const statusDiff = STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+    if (statusDiff !== 0) return statusDiff;
+    return a.startDate.localeCompare(b.startDate);
+  });
+}
 
 interface HabitsState {
   habits: HabitWithStats[];
@@ -27,7 +37,7 @@ export function useHabits(filters?: HabitFilters): HabitsState {
     setError(null);
     fetchHabits(filters)
       .then((data) => {
-        if (!cancelled) setHabits(data);
+        if (!cancelled) setHabits(sortHabits(data));
       })
       .catch((err: unknown) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load habits');
