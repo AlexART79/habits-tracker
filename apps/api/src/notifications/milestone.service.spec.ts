@@ -18,7 +18,9 @@ function makeHabit(overrides: {
     id: overrides.id ?? 'habit-1',
     name: overrides.name ?? 'Run',
     checkIns: (overrides.dates ?? []).map((date) => ({ date })),
-    milestoneNotifications: (overrides.existingMilestones ?? []).map((milestone) => ({ milestone })),
+    milestoneNotifications: (overrides.existingMilestones ?? []).map((milestone) => ({
+      milestone,
+    })),
   };
 }
 
@@ -27,10 +29,7 @@ describe('MilestoneService', () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      providers: [
-        MilestoneService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [MilestoneService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get(MilestoneService);
@@ -87,9 +86,7 @@ describe('MilestoneService', () => {
         d.setUTCDate(d.getUTCDate() + i);
         return d.toISOString().split('T')[0];
       });
-      mockPrisma.habit.findMany.mockResolvedValue([
-        makeHabit({ dates, existingMilestones: [3] }),
-      ]);
+      mockPrisma.habit.findMany.mockResolvedValue([makeHabit({ dates, existingMilestones: [3] })]);
       mockPrisma.milestoneNotification.create.mockResolvedValue({ id: 'notif-7' });
 
       const result = await service.evaluateMilestones('user-1');

@@ -28,7 +28,10 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
   async handleConnection(client: WebSocket, request: IncomingMessage): Promise<void> {
     try {
-      await promisify(this.sessionMiddleware)(request as Parameters<RequestHandler>[0], {} as Parameters<RequestHandler>[1]);
+      await promisify(this.sessionMiddleware)(
+        request as Parameters<RequestHandler>[0],
+        {} as Parameters<RequestHandler>[1],
+      );
     } catch {
       client.close(1011, 'Session error');
       return;

@@ -9,7 +9,14 @@ import { SessionConfigModule } from './config/session.config';
 import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
-  imports: [SessionConfigModule, PrismaModule, AuthModule, HabitsModule, CheckInsModule, NotificationsModule],
+  imports: [
+    SessionConfigModule,
+    PrismaModule,
+    AuthModule,
+    HabitsModule,
+    CheckInsModule,
+    NotificationsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
