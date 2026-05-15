@@ -73,7 +73,8 @@
       "Bash(Select-Object -First 50)",
       "Bash(dir -Recurse src -Directory)",
       "PowerShell(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Exclude \"node_modules\" -Recurse -File | Where-Object { $_.Extension -in '.ts', '.tsx', '.js', '.jsx', '.json' } | Select-Object -First 100 FullName)",
-      "Bash(grep -E \"\\\\.tsx?$\")"
+      "Bash(grep -E \"\\\\.tsx?$\")",
+      "PowerShell(dir \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName)"
     ]
   }
 }
