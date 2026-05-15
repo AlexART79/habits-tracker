@@ -67,7 +67,8 @@
       "PowerShell(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\api\\\\src\" -Recurse -Force | Where-Object { $_.PSIsContainer } | Select-Object FullName)",
       "PowerShell(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\" -Recurse -Force | Where-Object { $_.PSIsContainer } | Select-Object FullName)",
       "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Recurse -Force)",
-      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\src\" -Recurse -Include \"*.jsx\", \"*.js\", \"*.tsx\", \"*.ts\")"
+      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\src\" -Recurse -Include \"*.jsx\", \"*.js\", \"*.tsx\", \"*.ts\")",
+      "Bash(Get-ChildItem -Recurse -Depth 3)"
     ]
   }
 }

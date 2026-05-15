@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, AuthUser } from '../auth/useAuth';
 import { LoginPage } from '../pages/LoginPage';
 import { Layout } from './Layout';
+import { UserInfo } from './UserInfo';
 
 interface AuthShellProps {
   children: React.ReactNode;
@@ -38,17 +39,7 @@ export function AuthShell({ children }: AuthShellProps) {
 
   return (
     <Layout
-      headerRight={
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-700">{user.displayName}</span>
-          <button
-            onClick={() => void handleLogout()}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
-            Log out
-          </button>
-        </div>
-      }
+      headerRight={<UserInfo user={user} onLogout={() => void handleLogout()} />}
     >
       {children}
     </Layout>

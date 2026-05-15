@@ -57,3 +57,13 @@ export function IconClose() {
     </svg>
   );
 }
+
+export function IconLogout() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5.5 2H2a1 1 0 00-1 1v8a1 1 0 001 1h3.5" />
+      <path d="M9.5 10.5L13 7l-3.5-3.5" />
+      <path d="M13 7H5.5" />
+    </svg>
+  );
+}
