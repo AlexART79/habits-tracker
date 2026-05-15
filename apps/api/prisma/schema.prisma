@@ -46,11 +46,12 @@ model CheckIn {
 }
 
 model MilestoneNotification {
-  id        String   @id @default(cuid())
-  habitId   String
-  milestone Int
-  sentAt    DateTime @default(now())
-  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  habitId        String
+  milestone      Int
+  sentAt         DateTime  @default(now())
+  acknowledgedAt DateTime?
+  habit          Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
 
   @@unique([habitId, milestone])
 }

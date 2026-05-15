@@ -55,7 +55,17 @@
       "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Directory)",
       "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\" -Recurse -Directory)",
       "Bash(Get-ChildItem -Force)",
-      "Bash(Select-Object Name, FullName)"
+      "Bash(Select-Object Name, FullName)",
+      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\api\\\\src\" -Recurse -Include \"*.ts\")",
+      "Bash(npx prisma *)",
+      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\api\\\\prisma\\\\migrations\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(SEED_USER_PROVIDER=google SEED_USER_EMAIL=test@example.com npm run seed)",
+      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\\\\features\\\\notifications\\\\\" -Recurse -File | Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "PowerShell(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\api\\\\src\" -Recurse -Force | Where-Object { $_.PSIsContainer } | Select-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\" -Recurse -Force | Where-Object { $_.PSIsContainer } | Select-Object FullName)"
     ]
   }
 }
