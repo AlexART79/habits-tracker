@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { HabitWithStats, HabitFilters, HabitStatus } from './types';
 import { fetchHabits } from './habitsApi';
 
@@ -31,9 +31,22 @@ export function useHabits(filters?: HabitFilters): HabitsState {
   const status = filters?.status;
   const completedToday = filters?.completedToday;
 
+  // Track previous filter values to distinguish action-triggered reloads from filter changes.
+  // Action reloads (tick-only changes) refresh silently without showing the loading skeleton,
+  // which prevents the page from collapsing and scrolling to the top.
+  const prevRef = useRef({ search, status, completedToday, tick: -1 });
+
   useEffect(() => {
+    const prev = prevRef.current;
+    const isActionReload =
+      tick !== prev.tick &&
+      search === prev.search &&
+      status === prev.status &&
+      completedToday === prev.completedToday;
+    prevRef.current = { search, status, completedToday, tick };
+
     let cancelled = false;
-    setLoading(true);
+    if (!isActionReload) setLoading(true);
     setError(null);
     fetchHabits(filters)
       .then((data) => {
