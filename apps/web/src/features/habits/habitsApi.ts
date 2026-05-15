@@ -1,4 +1,10 @@
-import type { Habit, CreateHabitPayload, UpdateHabitPayload } from './types';
+import type {
+  Habit,
+  HabitWithStats,
+  CreateHabitPayload,
+  UpdateHabitPayload,
+  CheckInsResponse,
+} from './types';
 
 export class ApiError extends Error {
   constructor(
@@ -26,12 +32,12 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export function fetchHabits(): Promise<Habit[]> {
-  return apiFetch<Habit[]>('/habits');
+export function fetchHabits(): Promise<HabitWithStats[]> {
+  return apiFetch<HabitWithStats[]>('/habits');
 }
 
-export function fetchHabit(id: string): Promise<Habit> {
-  return apiFetch<Habit>(`/habits/${id}`);
+export function fetchHabit(id: string): Promise<HabitWithStats> {
+  return apiFetch<HabitWithStats>(`/habits/${id}`);
 }
 
 export function createHabit(payload: CreateHabitPayload): Promise<Habit> {
@@ -52,4 +58,16 @@ export function updateHabit(id: string, payload: UpdateHabitPayload): Promise<Ha
 
 export function deleteHabit(id: string): Promise<void> {
   return apiFetch<void>(`/habits/${id}`, { method: 'DELETE' });
+}
+
+export function checkInToday(habitId: string): Promise<void> {
+  return apiFetch<void>(`/habits/${habitId}/check-ins/today`, { method: 'POST' });
+}
+
+export function undoCheckIn(habitId: string): Promise<void> {
+  return apiFetch<void>(`/habits/${habitId}/check-ins/today`, { method: 'DELETE' });
+}
+
+export function fetchCheckIns(habitId: string, month: string): Promise<CheckInsResponse> {
+  return apiFetch<CheckInsResponse>(`/habits/${habitId}/check-ins?month=${month}`);
 }

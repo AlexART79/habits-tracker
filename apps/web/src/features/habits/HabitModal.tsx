@@ -1,7 +1,7 @@
 import React, { useEffect, useId } from 'react';
 import { createHabit, updateHabit } from './habitsApi';
 import { HabitForm } from './HabitForm';
-import type { Habit } from './types';
+import type { Habit, CreateHabitPayload, UpdateHabitPayload } from './types';
 
 interface HabitModalProps {
   mode: 'create' | 'edit';
@@ -21,11 +21,11 @@ export function HabitModal({ mode, habit, onClose, onSaved }: HabitModalProps) {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  async function handleSubmit(payload: Parameters<typeof createHabit>[0]) {
+  async function handleSubmit(payload: CreateHabitPayload | UpdateHabitPayload) {
     if (mode === 'edit' && habit) {
-      await updateHabit(habit.id, payload);
+      await updateHabit(habit.id, payload as UpdateHabitPayload);
     } else {
-      await createHabit(payload as Parameters<typeof createHabit>[0]);
+      await createHabit(payload as CreateHabitPayload);
     }
     onSaved();
     onClose();

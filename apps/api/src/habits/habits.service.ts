@@ -8,6 +8,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Habit } from '@prisma/client';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
+import { calculateStreaks, getToday } from '../streaks/streak.util';
+
+export interface HabitWithStats extends Omit<Habit, never> {
+  currentStreak: number;
+  bestStreak: number;
+  totalCheckIns: number;
+  completedToday: boolean;
+}
 
 @Injectable()
 export class HabitsService {
@@ -20,12 +28,48 @@ export class HabitsService {
     return habit;
   }
 
-  findAllByUser(userId: string): Promise<Habit[]> {
-    return this.prisma.habit.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
+  async findAllByUser(userId: string): Promise<HabitWithStats[]> {
+    const habits = await this.prisma.habit.findMany({
+      where: { userId },
+      include: {
+        checkIns: { select: { date: true }, orderBy: { date: 'asc' } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    const today = getToday();
+    return habits.map(({ checkIns, ...habit }) => {
+      const dates = checkIns.map((ci) => ci.date);
+      const { currentStreak, bestStreak, total } = calculateStreaks(dates, today);
+      return {
+        ...habit,
+        currentStreak,
+        bestStreak,
+        totalCheckIns: total,
+        completedToday: dates.includes(today),
+      };
+    });
   }
 
-  findOne(id: string, userId: string): Promise<Habit> {
-    return this.findOwnedOrThrow(id, userId);
+  async findOne(id: string, userId: string): Promise<HabitWithStats> {
+    const habit = await this.prisma.habit.findUnique({
+      where: { id },
+      include: {
+        checkIns: { select: { date: true }, orderBy: { date: 'asc' } },
+      },
+    });
+    if (!habit) throw new NotFoundException('Habit not found');
+    if (habit.userId !== userId) throw new ForbiddenException('Access denied');
+    const { checkIns, ...rest } = habit;
+    const today = getToday();
+    const dates = checkIns.map((ci) => ci.date);
+    const { currentStreak, bestStreak, total } = calculateStreaks(dates, today);
+    return {
+      ...rest,
+      currentStreak,
+      bestStreak,
+      totalCheckIns: total,
+      completedToday: dates.includes(today),
+    };
   }
 
   create(userId: string, dto: CreateHabitDto): Promise<Habit> {

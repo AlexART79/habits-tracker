@@ -2,9 +2,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HabitCard } from './HabitCard';
-import type { Habit } from './types';
+import type { HabitWithStats } from './types';
 
-const BASE_HABIT: Habit = {
+const BASE_HABIT: HabitWithStats = {
   id: 'h1',
   userId: 'u1',
   name: 'Morning Run',
@@ -13,14 +13,33 @@ const BASE_HABIT: Habit = {
   status: 'ACTIVE',
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
+  currentStreak: 3,
+  bestStreak: 7,
+  totalCheckIns: 10,
+  completedToday: false,
 };
 
-function renderCard(habit: Habit = BASE_HABIT) {
+function renderCard(habit: HabitWithStats = BASE_HABIT) {
   const onEdit = vi.fn();
   const onDelete = vi.fn();
+  const onArchive = vi.fn();
   const onStatusChange = vi.fn();
-  render(<HabitCard habit={habit} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} />);
-  return { onEdit, onDelete, onStatusChange };
+  const onCheckIn = vi.fn().mockResolvedValue(undefined);
+  const onUndoCheckIn = vi.fn().mockResolvedValue(undefined);
+  const onViewDetail = vi.fn();
+  render(
+    <HabitCard
+      habit={habit}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      onArchive={onArchive}
+      onStatusChange={onStatusChange}
+      onCheckIn={onCheckIn}
+      onUndoCheckIn={onUndoCheckIn}
+      onViewDetail={onViewDetail}
+    />,
+  );
+  return { onEdit, onDelete, onArchive, onStatusChange, onCheckIn, onUndoCheckIn, onViewDetail };
 }
 
 describe('HabitCard', () => {
@@ -33,6 +52,37 @@ describe('HabitCard', () => {
   it('renders the ACTIVE status badge', () => {
     renderCard();
     expect(screen.getByText('ACTIVE')).toBeInTheDocument();
+  });
+
+  it('renders streak values', () => {
+    renderCard();
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('7')).toBeInTheDocument();
+    expect(screen.getByText('10')).toBeInTheDocument();
+  });
+
+  it('shows Check In button for active habit not completed today', () => {
+    renderCard({ ...BASE_HABIT, completedToday: false });
+    expect(screen.getByRole('button', { name: 'Check in' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Undo check-in' })).not.toBeInTheDocument();
+  });
+
+  it('shows Undo button for active habit completed today', () => {
+    renderCard({ ...BASE_HABIT, completedToday: true });
+    expect(screen.getByRole('button', { name: 'Undo check-in' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Check in' })).not.toBeInTheDocument();
+  });
+
+  it('has no check-in or undo button for PAUSED habit', () => {
+    renderCard({ ...BASE_HABIT, status: 'PAUSED' });
+    expect(screen.queryByRole('button', { name: 'Check in' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Undo check-in' })).not.toBeInTheDocument();
+  });
+
+  it('has no check-in or undo button for ARCHIVED habit', () => {
+    renderCard({ ...BASE_HABIT, status: 'ARCHIVED' });
+    expect(screen.queryByRole('button', { name: 'Check in' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Undo check-in' })).not.toBeInTheDocument();
   });
 
   it('shows Edit, Pause, and Archive buttons for ACTIVE habit', () => {
@@ -50,9 +100,10 @@ describe('HabitCard', () => {
     expect(screen.queryByRole('button', { name: 'Pause' })).not.toBeInTheDocument();
   });
 
-  it('shows only Delete button for ARCHIVED habit', () => {
+  it('shows only Delete and View details buttons for ARCHIVED habit', () => {
     renderCard({ ...BASE_HABIT, status: 'ARCHIVED' });
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View details' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument();
   });
@@ -76,5 +127,27 @@ describe('HabitCard', () => {
     const { onDelete } = renderCard();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(onDelete).toHaveBeenCalledWith(BASE_HABIT);
+  });
+
+  it('calls onCheckIn when Check In is clicked', async () => {
+    const user = userEvent.setup();
+    const { onCheckIn } = renderCard({ ...BASE_HABIT, completedToday: false });
+    await user.click(screen.getByRole('button', { name: 'Check in' }));
+    expect(onCheckIn).toHaveBeenCalledWith(BASE_HABIT);
+  });
+
+  it('calls onUndoCheckIn when Undo is clicked', async () => {
+    const user = userEvent.setup();
+    const doneHabit = { ...BASE_HABIT, completedToday: true };
+    const { onUndoCheckIn } = renderCard(doneHabit);
+    await user.click(screen.getByRole('button', { name: 'Undo check-in' }));
+    expect(onUndoCheckIn).toHaveBeenCalledWith(doneHabit);
+  });
+
+  it('calls onViewDetail when View details is clicked', async () => {
+    const user = userEvent.setup();
+    const { onViewDetail } = renderCard();
+    await user.click(screen.getByRole('button', { name: 'View details' }));
+    expect(onViewDetail).toHaveBeenCalledWith(BASE_HABIT);
   });
 });

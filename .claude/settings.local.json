@@ -51,7 +51,9 @@
       "Bash(curl -s --max-time 2 http://localhost:3002/auth/me)",
       "Bash(npx tsc *)",
       "Bash(Select-Object FullName)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Directory)",
+      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\" -Recurse -Directory)"
     ]
   }
 }

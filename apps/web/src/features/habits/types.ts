@@ -11,6 +11,13 @@ export interface Habit {
   updatedAt: string;
 }
 
+export interface HabitWithStats extends Habit {
+  currentStreak: number;
+  bestStreak: number;
+  totalCheckIns: number;
+  completedToday: boolean;
+}
+
 export interface CreateHabitPayload {
   name: string;
   description?: string;
@@ -22,4 +29,8 @@ export interface UpdateHabitPayload {
   description?: string;
   startDate?: string;
   status?: HabitStatus;
+}
+
+export interface CheckInsResponse {
+  dates: string[];
 }

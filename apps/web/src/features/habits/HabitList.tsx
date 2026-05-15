@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../../components/Button';
 import { HabitCard } from './HabitCard';
 import { HabitModal } from './HabitModal';
-import { updateHabit, deleteHabit } from './habitsApi';
-import type { Habit, HabitStatus } from './types';
+import { HabitDetail } from './HabitDetail';
+import { updateHabit, deleteHabit, checkInToday, undoCheckIn } from './habitsApi';
+import type { HabitWithStats, HabitStatus } from './types';
 
 interface HabitListProps {
-  habits: Habit[];
+  habits: HabitWithStats[];
   loading: boolean;
   error: string | null;
   onReload: () => void;
-  onCreateClick: () => void;
+  onCreateClick?: () => void;
 }
 
 function LoadingSkeleton() {
@@ -30,17 +31,34 @@ function LoadingSkeleton() {
   );
 }
 
-export function HabitList({ habits, loading, error, onReload, onCreateClick }: HabitListProps) {
-  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+export function HabitList({ habits, loading, error, onReload }: HabitListProps) {
+  const [editingHabit, setEditingHabit] = useState<HabitWithStats | null>(null);
+  const [detailHabit, setDetailHabit] = useState<HabitWithStats | null>(null);
 
-  async function handleStatusChange(habit: Habit, status: HabitStatus) {
+  async function handleStatusChange(habit: HabitWithStats, status: HabitStatus) {
     await updateHabit(habit.id, { status });
     onReload();
   }
 
-  async function handleDelete(habit: Habit) {
+  async function handleArchive(habit: HabitWithStats) {
+    if (!window.confirm(`Archive "${habit.name}"? This cannot be undone.`)) return;
+    await updateHabit(habit.id, { status: 'ARCHIVED' });
+    onReload();
+  }
+
+  async function handleDelete(habit: HabitWithStats) {
     if (!window.confirm(`Delete "${habit.name}"? This cannot be undone.`)) return;
     await deleteHabit(habit.id);
+    onReload();
+  }
+
+  async function handleCheckIn(habit: HabitWithStats) {
+    await checkInToday(habit.id);
+    onReload();
+  }
+
+  async function handleUndoCheckIn(habit: HabitWithStats) {
+    await undoCheckIn(habit.id);
     onReload();
   }
 
@@ -74,7 +92,11 @@ export function HabitList({ habits, loading, error, onReload, onCreateClick }: H
             habit={habit}
             onEdit={setEditingHabit}
             onDelete={handleDelete}
+            onArchive={handleArchive}
             onStatusChange={handleStatusChange}
+            onCheckIn={handleCheckIn}
+            onUndoCheckIn={handleUndoCheckIn}
+            onViewDetail={setDetailHabit}
           />
         ))}
       </div>
@@ -88,6 +110,9 @@ export function HabitList({ habits, loading, error, onReload, onCreateClick }: H
             onReload();
           }}
         />
+      )}
+      {detailHabit && (
+        <HabitDetail habit={detailHabit} onClose={() => setDetailHabit(null)} />
       )}
     </>
   );

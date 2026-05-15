@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Habit } from './types';
+import type { HabitWithStats } from './types';
 import { fetchHabits } from './habitsApi';
 
 interface HabitsState {
-  habits: Habit[];
+  habits: HabitWithStats[];
   loading: boolean;
   error: string | null;
   reload: () => void;
 }
 
 export function useHabits(): HabitsState {
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const [habits, setHabits] = useState<HabitWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
