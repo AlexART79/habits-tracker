@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { HabitWithStats } from './types';
+import type { HabitWithStats, HabitFilters } from './types';
 import { fetchHabits } from './habitsApi';
 
 interface HabitsState {
@@ -9,7 +9,7 @@ interface HabitsState {
   reload: () => void;
 }
 
-export function useHabits(): HabitsState {
+export function useHabits(filters?: HabitFilters): HabitsState {
   const [habits, setHabits] = useState<HabitWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,11 +17,15 @@ export function useHabits(): HabitsState {
 
   const reload = useCallback(() => setTick((n) => n + 1), []);
 
+  const search = filters?.search;
+  const status = filters?.status;
+  const completedToday = filters?.completedToday;
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetchHabits()
+    fetchHabits(filters)
       .then((data) => {
         if (!cancelled) setHabits(data);
       })
@@ -34,7 +38,8 @@ export function useHabits(): HabitsState {
     return () => {
       cancelled = true;
     };
-  }, [tick]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, search, status, completedToday]);
 
   return { habits, loading, error, reload };
 }

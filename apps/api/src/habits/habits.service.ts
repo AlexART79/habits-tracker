@@ -5,9 +5,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Habit } from '@prisma/client';
+import { Habit, Prisma } from '@prisma/client';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
+import { GetHabitsQueryDto } from './dto/get-habits-query.dto';
 import { calculateStreaks, getToday } from '../streaks/streak.util';
 
 export interface HabitWithStats extends Omit<Habit, never> {
@@ -28,16 +29,26 @@ export class HabitsService {
     return habit;
   }
 
-  async findAllByUser(userId: string): Promise<HabitWithStats[]> {
+  async findAllByUser(userId: string, filters?: GetHabitsQueryDto): Promise<HabitWithStats[]> {
+    const where: Prisma.HabitWhereInput = { userId };
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search } },
+        { description: { contains: filters.search } },
+      ];
+    }
+    if (filters?.status) {
+      where.status = filters.status;
+    }
     const habits = await this.prisma.habit.findMany({
-      where: { userId },
+      where,
       include: {
         checkIns: { select: { date: true }, orderBy: { date: 'asc' } },
       },
       orderBy: { createdAt: 'desc' },
     });
     const today = getToday();
-    return habits.map(({ checkIns, ...habit }) => {
+    let result = habits.map(({ checkIns, ...habit }) => {
       const dates = checkIns.map((ci) => ci.date);
       const { currentStreak, bestStreak, total } = calculateStreaks(dates, today);
       return {
@@ -48,6 +59,10 @@ export class HabitsService {
         completedToday: dates.includes(today),
       };
     });
+    if (filters?.completedToday !== undefined) {
+      result = result.filter((h) => h.completedToday === filters.completedToday);
+    }
+    return result;
   }
 
   async findOne(id: string, userId: string): Promise<HabitWithStats> {

@@ -53,7 +53,9 @@
       "Bash(Select-Object FullName)",
       "Bash(npx eslint *)",
       "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Directory)",
-      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\" -Recurse -Directory)"
+      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\" -Recurse -Directory)",
+      "Bash(Get-ChildItem -Force)",
+      "Bash(Select-Object Name, FullName)"
     ]
   }
 }

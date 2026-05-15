@@ -34,3 +34,9 @@ export interface UpdateHabitPayload {
 export interface CheckInsResponse {
   dates: string[];
 }
+
+export interface HabitFilters {
+  search?: string;
+  status?: HabitStatus | '';
+  completedToday?: boolean | null;
+}

@@ -64,6 +64,13 @@ describe('HabitList', () => {
     expect(screen.getByText(/no habits yet/i)).toBeInTheDocument();
   });
 
+  it('shows "no results" message when habits are empty and filters are active', () => {
+    render(
+      <HabitList habits={[]} loading={false} error={null} onReload={vi.fn()} hasFilters={true} />,
+    );
+    expect(screen.getByText(/no habits match your filters/i)).toBeInTheDocument();
+  });
+
   it('renders habit cards when habits are present', () => {
     render(
       <HabitList habits={[HABIT]} loading={false} error={null} onReload={vi.fn()} />,

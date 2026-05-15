@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   HttpCode,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { HabitsService } from './habits.service';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
+import { GetHabitsQueryDto } from './dto/get-habits-query.dto';
 
 @Controller('habits')
 @UseGuards(AuthenticatedGuard)
@@ -22,8 +24,8 @@ export class HabitsController {
   constructor(private readonly habitsService: HabitsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: User) {
-    return this.habitsService.findAllByUser(user.id);
+  findAll(@CurrentUser() user: User, @Query() query: GetHabitsQueryDto) {
+    return this.habitsService.findAllByUser(user.id, query);
   }
 
   @Post()

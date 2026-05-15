@@ -2,25 +2,31 @@ import { useState } from 'react';
 import { AuthShell } from './components/AuthShell';
 import { Button } from './components/Button';
 import { HabitList } from './features/habits/HabitList';
+import { HabitFilters } from './features/habits/HabitFilters';
 import { HabitModal } from './features/habits/HabitModal';
 import { useHabits } from './features/habits/useHabits';
+import type { HabitFilters as HabitFiltersType } from './features/habits/types';
 
 function App() {
-  const { habits, loading, error, reload } = useHabits();
+  const [filters, setFilters] = useState<HabitFiltersType>({});
+  const { habits, loading, error, reload } = useHabits(filters);
   const [createOpen, setCreateOpen] = useState(false);
+  const hasFilters = Boolean(filters.search || filters.status || filters.completedToday != null);
 
   return (
     <AuthShell>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-y-2 mb-6">
         <h2 className="text-xl font-semibold text-gray-900">My Habits</h2>
         <Button onClick={() => setCreateOpen(true)}>New Habit</Button>
       </div>
+      <HabitFilters filters={filters} onChange={setFilters} />
       <HabitList
         habits={habits}
         loading={loading}
         error={error}
         onReload={reload}
         onCreateClick={() => setCreateOpen(true)}
+        hasFilters={hasFilters}
       />
       {createOpen && (
         <HabitModal
