@@ -46,7 +46,10 @@
       "Bash(cat apps/web/vite.config.ts)",
       "Bash(cat apps/web/vite.config.js)",
       "Bash(cat apps/web/vitest.config.ts)",
-      "Bash(cat apps/web/vitest.config.js)"
+      "Bash(cat apps/web/vitest.config.js)",
+      "Bash(netstat -ano)",
+      "Bash(curl -s --max-time 2 http://localhost:3002/auth/me)",
+      "Bash(npx tsc *)"
     ]
   }
 }

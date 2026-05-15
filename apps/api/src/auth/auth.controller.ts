@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Req, UseGuards, Body, HttpCode, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+  Body,
+  HttpCode,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { User } from '@prisma/client';
 import { AuthGuard } from '@nestjs/passport';
@@ -9,6 +19,24 @@ import { TestLoginDto } from './dto/test-login.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 
 const FRONTEND_URL = process.env['FRONTEND_URL'] ?? 'http://localhost:5175';
+
+async function persistAuthenticatedSession(req: Request): Promise<void> {
+  if (!req.user) {
+    throw new UnauthorizedException('OAuth callback did not include an authenticated user');
+  }
+  const user = req.user;
+
+  await new Promise<void>((resolve, reject) => {
+    req.login(user, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
+  await new Promise<void>((resolve, reject) =>
+    req.session.save((err) => (err ? reject(err) : resolve())),
+  );
+}
 
 @Controller('auth')
 export class AuthController {
@@ -66,7 +94,8 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  googleCallback(@Res() res: Response): void {
+  async googleCallback(@Req() req: Request, @Res() res: Response): Promise<void> {
+    await persistAuthenticatedSession(req);
     res.redirect(FRONTEND_URL);
   }
 
@@ -76,7 +105,8 @@ export class AuthController {
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
-  githubCallback(@Res() res: Response): void {
+  async githubCallback(@Req() req: Request, @Res() res: Response): Promise<void> {
+    await persistAuthenticatedSession(req);
     res.redirect(FRONTEND_URL);
   }
 }

@@ -6,6 +6,12 @@ export default defineConfig({
   server: {
     port: 5175,
     strictPort: true,
+    proxy: {
+      '/auth': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     port: 5175,

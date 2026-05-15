@@ -4,10 +4,10 @@
   "private": true,
   "workspaces": ["apps/*"],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=apps/api\" \"npm run dev --workspace=apps/web\"",
+    "dev": "concurrently \"npm run dev --workspace=apps/api\" \"node scripts/wait-for-url-and-run.mjs http://localhost:3002/auth/me -- npm run dev --workspace=apps/web\"",
     "typecheck": "npm run typecheck -w apps/api && npm run typecheck -w apps/web",
     "lint": "npm run lint -w apps/api && npm run lint -w apps/web",
-    "test": "npm test -w apps/api && npm test -w apps/web",
+    "test": "node --test scripts/*.test.mjs && npm test -w apps/api && npm test -w apps/web",
     "prisma:migrate": "npm run prisma:migrate -w apps/api"
   },
   "devDependencies": {

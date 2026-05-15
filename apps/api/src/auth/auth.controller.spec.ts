@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { ExecutionContext } from '@nestjs/common';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
 import { TestEnvGuard } from './guards/test-env.guard';
+import { Request, Response } from 'express';
 
 const mockUser = {
   id: 'user-1',
@@ -86,6 +87,44 @@ describe('AuthController', () => {
       });
       expect(mockLogin).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockUser);
+    });
+  });
+
+  describe('OAuth callbacks', () => {
+    function createOAuthCallbackMocks() {
+      const mockLogin = jest.fn((user: unknown, cb: () => void) => cb());
+      const mockSave = jest.fn((cb: () => void) => cb());
+      const mockRedirect = jest.fn();
+      const req = {
+        user: mockUser,
+        login: mockLogin,
+        session: { save: mockSave },
+      } as unknown as Request;
+      const res = {
+        redirect: mockRedirect,
+      } as unknown as Response;
+
+      return { req, res, mockLogin, mockSave, mockRedirect };
+    }
+
+    it('logs the Google OAuth user into the session before redirecting', async () => {
+      const { req, res, mockLogin, mockSave, mockRedirect } = createOAuthCallbackMocks();
+
+      await controller.googleCallback(req, res);
+
+      expect(mockLogin).toHaveBeenCalledWith(mockUser, expect.any(Function));
+      expect(mockSave).toHaveBeenCalledTimes(1);
+      expect(mockRedirect).toHaveBeenCalledWith('http://localhost:5175');
+    });
+
+    it('logs the GitHub OAuth user into the session before redirecting', async () => {
+      const { req, res, mockLogin, mockSave, mockRedirect } = createOAuthCallbackMocks();
+
+      await controller.githubCallback(req, res);
+
+      expect(mockLogin).toHaveBeenCalledWith(mockUser, expect.any(Function));
+      expect(mockSave).toHaveBeenCalledTimes(1);
+      expect(mockRedirect).toHaveBeenCalledWith('http://localhost:5175');
     });
   });
 });
