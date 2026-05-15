@@ -89,7 +89,7 @@ export function HabitForm({ initialValues, onSubmit, onCancel, submitLabel }: Ha
           type="date"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-          className={FORM_FIELD_CLASSES}
+          className={`${FORM_FIELD_CLASSES} dark:[color-scheme:dark]`}
         />
       </div>
 

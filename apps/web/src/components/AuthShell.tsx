@@ -42,8 +42,8 @@ export function AuthShell({ children }: AuthShellProps) {
     <Layout
       headerRight={
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <UserInfo user={user} onLogout={() => void handleLogout()} />
+          <ThemeToggle />
         </div>
       }
     >
