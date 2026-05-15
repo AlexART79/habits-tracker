@@ -47,9 +47,9 @@ export function HabitModal({ mode, habit, onClose, onSaved }: HabitModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-md bg-white rounded-xl shadow-xl p-6"
+        className="w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6"
       >
-        <h2 id={titleId} className="text-lg font-semibold text-gray-900 mb-5">
+        <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-5">
           {mode === 'create' ? 'New habit' : 'Edit habit'}
         </h2>
         <HabitForm

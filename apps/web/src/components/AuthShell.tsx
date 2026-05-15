@@ -3,6 +3,7 @@ import { useAuth, AuthUser } from '../auth/useAuth';
 import { LoginPage } from '../pages/LoginPage';
 import { Layout } from './Layout';
 import { UserInfo } from './UserInfo';
+import { ThemeToggle } from './ThemeToggle';
 
 interface AuthShellProps {
   children: React.ReactNode;
@@ -20,8 +21,8 @@ export function AuthShell({ children }: AuthShellProps) {
 
   if (loading || user === undefined) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div role="status" aria-label="Loading" className="text-gray-500">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+        <div role="status" aria-label="Loading" className="text-gray-500 dark:text-gray-400">
           Loading...
         </div>
       </div>
@@ -39,7 +40,12 @@ export function AuthShell({ children }: AuthShellProps) {
 
   return (
     <Layout
-      headerRight={<UserInfo user={user} onLogout={() => void handleLogout()} />}
+      headerRight={
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <UserInfo user={user} onLogout={() => void handleLogout()} />
+        </div>
+      }
     >
       {children}
     </Layout>

@@ -1,6 +1,15 @@
 export function IconEdit() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" />
     </svg>
   );
@@ -25,7 +34,16 @@ export function IconResume() {
 
 export function IconArchive() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="1" y="2" width="12" height="3" rx="0.5" />
       <path d="M2 5v6a1 1 0 001 1h8a1 1 0 001-1V5" />
       <path d="M5.5 8h3M7 6.5v3" />
@@ -35,7 +53,16 @@ export function IconArchive() {
 
 export function IconDelete() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M2 4h10M5 4V2.5h4V4M11 4l-.8 7.5a1 1 0 01-1 .9H4.8a1 1 0 01-1-.9L3 4" />
     </svg>
   );
@@ -43,7 +70,16 @@ export function IconDelete() {
 
 export function IconDetail() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="7" cy="7" r="5.5" />
       <path d="M7 6v4M7 4.5v.5" />
     </svg>
@@ -60,10 +96,55 @@ export function IconClose() {
 
 export function IconLogout() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M5.5 2H2a1 1 0 00-1 1v8a1 1 0 001 1h3.5" />
       <path d="M9.5 10.5L13 7l-3.5-3.5" />
       <path d="M13 7H5.5" />
+    </svg>
+  );
+}
+
+export function IconSun() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="7" cy="7" r="2.5" />
+      <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M11.07 2.93L10.01 3.99M3.99 10.01L2.93 11.07" />
+    </svg>
+  );
+}
+
+export function IconMoon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
     </svg>
   );
 }

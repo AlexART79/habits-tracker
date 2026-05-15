@@ -61,9 +61,9 @@ export function HabitCard({
       <div className="flex-1 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold text-gray-900 truncate">{habit.name}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-50 truncate">{habit.name}</h3>
             {habit.description && (
-              <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{habit.description}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{habit.description}</p>
             )}
           </div>
           <span
@@ -73,19 +73,19 @@ export function HabitCard({
           </span>
         </div>
 
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-400 dark:text-gray-500">
           Started {new Date(habit.startDate).toLocaleDateString()}
         </p>
 
-        <div className="flex items-center gap-3 text-xs text-gray-500 border-t border-gray-100 pt-2">
+        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-2">
           <span title="Current streak">
-            Streak: <span className="font-medium text-gray-700">{habit.currentStreak}</span>
+            Streak: <span className="font-medium text-gray-700 dark:text-gray-200">{habit.currentStreak}</span>
           </span>
           <span title="Best streak">
-            Best: <span className="font-medium text-gray-700">{habit.bestStreak}</span>
+            Best: <span className="font-medium text-gray-700 dark:text-gray-200">{habit.bestStreak}</span>
           </span>
           <span title="Total check-ins">
-            Total: <span className="font-medium text-gray-700">{habit.totalCheckIns}</span>
+            Total: <span className="font-medium text-gray-700 dark:text-gray-200">{habit.totalCheckIns}</span>
           </span>
         </div>
       </div>
@@ -98,7 +98,7 @@ export function HabitCard({
               aria-label="Undo check-in"
               onClick={handleUndo}
               disabled={busy}
-              className="w-full text-sm font-medium py-1.5 px-3 rounded border border-green-300 bg-green-50 text-green-700 hover:bg-green-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-500 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full text-sm font-medium py-1.5 px-3 rounded border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-500 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {busy ? 'Saving…' : 'Done today — Undo'}
             </button>
@@ -107,7 +107,7 @@ export function HabitCard({
               aria-label="Check in"
               onClick={handleCheckIn}
               disabled={busy || !isActive}
-              className="w-full text-sm font-medium py-1.5 px-3 rounded border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full text-sm font-medium py-1.5 px-3 rounded border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {busy ? 'Saving…' : 'Check In'}
             </button>
@@ -141,7 +141,7 @@ export function HabitCard({
           <IconBtn
             title="Delete"
             onClick={() => onDelete(habit)}
-            className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+            className="hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800"
           >
             <IconDelete />
           </IconBtn>

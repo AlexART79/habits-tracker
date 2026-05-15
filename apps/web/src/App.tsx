@@ -19,7 +19,7 @@ function App() {
   return (
     <AuthShell>
       <div className="flex flex-wrap items-center justify-between gap-y-2 mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">My Habits</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-300">My Habits</h2>
         <Button onClick={() => setCreateOpen(true)}>New Habit</Button>
       </div>
       <HabitFilters filters={filters} onChange={setFilters} />

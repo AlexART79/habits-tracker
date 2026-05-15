@@ -11,6 +11,7 @@ A full-stack habit tracking application with daily check-ins, streak calculation
 - Search and filter habits by name, status, and completion
 - Real-time WebSocket notifications when you hit 3-, 7-, or 30-day milestones
 - Milestones are not repeated on reconnect
+- Light (default) and dark mode — toggle via the sun/moon button in the header; preference is saved in `localStorage`
 
 ---
 

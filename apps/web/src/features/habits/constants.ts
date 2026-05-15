@@ -1,9 +1,9 @@
 import type { HabitStatus } from './types';
 
 export const STATUS_BADGE_CLASSES: Record<HabitStatus, string> = {
-  ACTIVE: 'bg-green-100 text-green-800',
-  PAUSED: 'bg-yellow-100 text-yellow-800',
-  ARCHIVED: 'bg-gray-100 text-gray-600',
+  ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+  PAUSED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+  ARCHIVED: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
 };
 
 export const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
@@ -33,6 +33,6 @@ export const MODAL_BACKDROP_CLASSES =
   'fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4';
 
 export const FORM_FIELD_CLASSES =
-  'w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500';
+  'w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500';
 
-export const FORM_LABEL_CLASSES = 'block text-sm font-medium text-gray-700 mb-1';
+export const FORM_LABEL_CLASSES = 'block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1';

@@ -68,7 +68,12 @@
       "PowerShell(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\apps\\\\web\\\\src\" -Recurse -Force | Where-Object { $_.PSIsContainer } | Select-Object FullName)",
       "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Recurse -Force)",
       "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\\\\src\" -Recurse -Include \"*.jsx\", \"*.js\", \"*.tsx\", \"*.ts\")",
-      "Bash(Get-ChildItem -Recurse -Depth 3)"
+      "Bash(Get-ChildItem -Recurse -Depth 3)",
+      "Bash(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Exclude \"node_modules\", \".git\", \"dist\", \"build\" -Recurse -File)",
+      "Bash(Select-Object -First 50)",
+      "Bash(dir -Recurse src -Directory)",
+      "PowerShell(Get-ChildItem -Path \"e:\\\\JsCourse\\\\claude-projects\\\\habits-tracker\" -Exclude \"node_modules\" -Recurse -File | Where-Object { $_.Extension -in '.ts', '.tsx', '.js', '.jsx', '.json' } | Select-Object -First 100 FullName)",
+      "Bash(grep -E \"\\\\.tsx?$\")"
     ]
   }
 }

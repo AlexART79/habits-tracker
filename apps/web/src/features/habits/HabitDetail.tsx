@@ -51,16 +51,16 @@ export function HabitDetail({ habit, onClose }: HabitDetailProps) {
       aria-labelledby="detail-title"
     >
       <div
-        className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-2 p-5 border-b border-gray-100">
+        <div className="flex items-start justify-between gap-2 p-5 border-b border-gray-100 dark:border-gray-700">
           <div className="flex-1 min-w-0">
-            <h2 id="detail-title" className="text-lg font-semibold text-gray-900 truncate">
+            <h2 id="detail-title" className="text-lg font-semibold text-gray-900 dark:text-gray-50 truncate">
               {habit.name}
             </h2>
             {habit.description && (
-              <p className="text-sm text-gray-500 mt-0.5">{habit.description}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{habit.description}</p>
             )}
           </div>
           <span
@@ -70,7 +70,7 @@ export function HabitDetail({ habit, onClose }: HabitDetailProps) {
           </span>
         </div>
 
-        <div className="px-5 py-4 border-b border-gray-100">
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
           <div className="flex gap-6 text-sm">
             <HabitStatCard value={habit.currentStreak} label="Current streak" />
             <HabitStatCard value={habit.bestStreak} label="Best streak" />
@@ -83,15 +83,15 @@ export function HabitDetail({ habit, onClose }: HabitDetailProps) {
             <button
               aria-label="Previous month"
               onClick={() => setCurrentMonth((m) => shiftMonth(m, -1))}
-              className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-500 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
             >
               &#8249;
             </button>
-            <p className="text-sm font-medium text-gray-700">{monthLabel(currentMonth)}</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{monthLabel(currentMonth)}</p>
             <button
               aria-label="Next month"
               onClick={() => setCurrentMonth((m) => shiftMonth(m, 1))}
-              className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-500 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
             >
               &#8250;
             </button>
@@ -99,14 +99,14 @@ export function HabitDetail({ habit, onClose }: HabitDetailProps) {
 
           <div className="grid grid-cols-7 gap-1 mb-1">
             {WEEKDAYS.map((d) => (
-              <div key={d} className="text-center text-xs text-gray-400 font-medium py-1">
+              <div key={d} className="text-center text-xs text-gray-400 dark:text-gray-500 font-medium py-1">
                 {d}
               </div>
             ))}
           </div>
 
           {loadingDates ? (
-            <div className="h-32 flex items-center justify-center text-sm text-gray-400">
+            <div className="h-32 flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
               Loading…
             </div>
           ) : (
@@ -125,7 +125,7 @@ export function HabitDetail({ habit, onClose }: HabitDetailProps) {
                         ? 'bg-blue-500 text-white'
                         : isToday
                           ? 'ring-2 ring-blue-400 text-gray-700'
-                          : 'text-gray-600 hover:bg-gray-50',
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800',
                     ].join(' ')}
                   >
                     {new Date(date + 'T00:00:00').getDate()}
@@ -136,14 +136,14 @@ export function HabitDetail({ habit, onClose }: HabitDetailProps) {
           )}
 
           {!loadingDates && checkedDates.size === 0 && (
-            <p className="text-center text-sm text-gray-400 mt-3">No check-ins this month</p>
+            <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-3">No check-ins this month</p>
           )}
         </div>
 
         <div className="px-5 pb-5">
           <button
             onClick={onClose}
-            className="w-full py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+            className="w-full py-2 text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
           >
             Close
           </button>

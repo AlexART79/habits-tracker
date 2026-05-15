@@ -6,8 +6,8 @@ interface HabitStatCardProps {
 export function HabitStatCard({ value, label }: HabitStatCardProps) {
   return (
     <div className="text-center">
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{value}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</p>
     </div>
   );
 }

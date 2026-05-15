@@ -26,7 +26,7 @@ export function UserInfo({ user, onLogout }: UserInfoProps) {
           src={user.avatarUrl!}
           alt={user.displayName ?? 'User avatar'}
           onError={() => setImgError(true)}
-          className="w-8 h-8 rounded-full object-cover ring-2 ring-white"
+          className="w-8 h-8 rounded-full object-cover ring-2 ring-white dark:ring-gray-800"
         />
       ) : (
         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold select-none">
@@ -34,7 +34,7 @@ export function UserInfo({ user, onLogout }: UserInfoProps) {
         </div>
       )}
 
-      <span className="text-sm font-medium text-gray-700">
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
         {user.displayName ?? user.email ?? 'User'}
       </span>
 

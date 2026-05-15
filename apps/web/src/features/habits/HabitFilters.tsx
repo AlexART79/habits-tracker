@@ -45,13 +45,13 @@ export function HabitFilters({ filters, onChange }: HabitFiltersProps) {
         placeholder="Search habits…"
         value={searchDraft}
         onChange={(e) => setSearchDraft(e.target.value)}
-        className="flex-1 min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="flex-1 min-w-0 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
       <select
         aria-label="Filter by status"
         value={filters.status ?? ''}
         onChange={handleStatusChange}
-        className="sm:w-40 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="sm:w-40 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       >
         {STATUS_FILTER_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -69,7 +69,7 @@ export function HabitFilters({ filters, onChange }: HabitFiltersProps) {
               : ''
         }
         onChange={handleCompletedTodayChange}
-        className="sm:w-48 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="sm:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       >
         {COMPLETION_FILTER_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>
