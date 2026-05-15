@@ -161,9 +161,9 @@ export function HabitCard({
         </span>
       </div>
 
-      {isActive && (
+      {!isArchived && (
         <div className="pt-1">
-          {habit.completedToday ? (
+          {isActive && habit.completedToday ? (
             <button
               aria-label="Undo check-in"
               onClick={handleUndo}
@@ -176,7 +176,7 @@ export function HabitCard({
             <button
               aria-label="Check in"
               onClick={handleCheckIn}
-              disabled={busy}
+              disabled={busy || !isActive}
               className="w-full text-sm font-medium py-1.5 px-3 rounded border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {busy ? 'Saving…' : 'Check In'}
