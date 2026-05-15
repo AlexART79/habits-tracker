@@ -374,6 +374,15 @@ Do not hide server errors.
 
 Do not rely only on color to communicate important status.
 
+### Component structure rules
+
+- One file, one component. Never define multiple exported components in the same file.
+- Components receive only props. Do not call API functions or import business logic directly inside a component file.
+- Move all non-trivial logic (event handlers, data transformations, async operations) to custom hooks or utility files.
+- Extract custom hooks (`use*.ts`) for any stateful logic that is reusable or makes a component hard to read.
+- Move hardcoded string literals, class name strings, and numeric constants into a dedicated `constants.ts` file and import them.
+- Inline sub-components (functions that return JSX defined inside another component file) must be extracted to their own files.
+
 ## Tailwind rules
 
 Use light theme only.
