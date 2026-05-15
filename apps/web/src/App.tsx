@@ -5,6 +5,8 @@ import { HabitList } from './features/habits/HabitList';
 import { HabitFilters } from './features/habits/HabitFilters';
 import { HabitModal } from './features/habits/HabitModal';
 import { useHabits } from './features/habits/useHabits';
+import { useNotifications } from './features/notifications/useNotifications';
+import { NotificationToast } from './features/notifications/NotificationToast';
 import type { HabitFilters as HabitFiltersType } from './features/habits/types';
 
 function App() {
@@ -12,6 +14,7 @@ function App() {
   const { habits, loading, error, reload } = useHabits(filters);
   const [createOpen, setCreateOpen] = useState(false);
   const hasFilters = Boolean(filters.search || filters.status || filters.completedToday != null);
+  const { notifications, acknowledge } = useNotifications();
 
   return (
     <AuthShell>
@@ -38,6 +41,7 @@ function App() {
           }}
         />
       )}
+      <NotificationToast notifications={notifications} onAck={acknowledge} />
     </AuthShell>
   );
 }

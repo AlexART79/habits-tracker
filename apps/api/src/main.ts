@@ -2,32 +2,19 @@ import './config/load-env-runtime';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { WsAdapter } from '@nestjs/platform-ws';
 import { AppModule } from './app.module';
-import session = require('express-session');
+import { SESSION_MIDDLEWARE } from './config/session.config';
 import passport = require('passport');
-import connectSqlite3 from 'connect-sqlite3';
-
-const SQLiteStore = connectSqlite3(session);
+import type { RequestHandler } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.use(
-    session({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      store: new SQLiteStore({ db: 'sessions.db', dir: './prisma' }) as any,
-      secret: process.env['SESSION_SECRET'] ?? 'dev-secret-change-in-production',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        httpOnly: true,
-        secure: process.env['NODE_ENV'] === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      },
-    }),
-  );
+  app.useWebSocketAdapter(new WsAdapter(app));
 
+  const sessionMiddleware = app.get<RequestHandler>(SESSION_MIDDLEWARE);
+  app.use(sessionMiddleware);
   app.use(passport.initialize());
   app.use(passport.session());
 
