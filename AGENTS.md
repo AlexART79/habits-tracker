@@ -91,8 +91,10 @@ URLs:
 Before considering any task complete, run and pass:
 
 npm run typecheck
-npm run lint
+npm run lint -- --fix
 npm test
+
+_running 'npm run lint -- --fix' to fix all autofixable errors will save a lot of time and tokens_
 
 Do not mark work as complete if typecheck, lint, or tests fail.
 

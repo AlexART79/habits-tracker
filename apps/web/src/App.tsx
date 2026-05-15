@@ -1,14 +1,37 @@
+import { useState } from 'react';
 import { AuthShell } from './components/AuthShell';
-import { Card } from './components/Card';
 import { Button } from './components/Button';
+import { HabitList } from './features/habits/HabitList';
+import { HabitModal } from './features/habits/HabitModal';
+import { useHabits } from './features/habits/useHabits';
 
 function App() {
+  const { habits, loading, error, reload } = useHabits();
+  const [createOpen, setCreateOpen] = useState(false);
+
   return (
     <AuthShell>
-      <Card title="Welcome">
-        <p className="text-gray-600 mb-4">Your habits, tracked daily.</p>
-        <Button>Get Started</Button>
-      </Card>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-gray-900">My Habits</h2>
+        <Button onClick={() => setCreateOpen(true)}>New Habit</Button>
+      </div>
+      <HabitList
+        habits={habits}
+        loading={loading}
+        error={error}
+        onReload={reload}
+        onCreateClick={() => setCreateOpen(true)}
+      />
+      {createOpen && (
+        <HabitModal
+          mode="create"
+          onClose={() => setCreateOpen(false)}
+          onSaved={() => {
+            setCreateOpen(false);
+            reload();
+          }}
+        />
+      )}
     </AuthShell>
   );
 }

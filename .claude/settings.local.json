@@ -49,7 +49,9 @@
       "Bash(cat apps/web/vitest.config.js)",
       "Bash(netstat -ano)",
       "Bash(curl -s --max-time 2 http://localhost:3002/auth/me)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(Select-Object FullName)",
+      "Bash(npx eslint *)"
     ]
   }
 }
