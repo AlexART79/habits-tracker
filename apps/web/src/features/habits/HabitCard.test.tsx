@@ -73,9 +73,11 @@ describe('HabitCard', () => {
     expect(screen.queryByRole('button', { name: 'Check in' })).not.toBeInTheDocument();
   });
 
-  it('has no check-in or undo button for PAUSED habit', () => {
+  it('shows a disabled Check In button for PAUSED habit', () => {
     renderCard({ ...BASE_HABIT, status: 'PAUSED' });
-    expect(screen.queryByRole('button', { name: 'Check in' })).not.toBeInTheDocument();
+    const btn = screen.getByRole('button', { name: 'Check in' });
+    expect(btn).toBeInTheDocument();
+    expect(btn).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Undo check-in' })).not.toBeInTheDocument();
   });
 

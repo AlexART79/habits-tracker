@@ -12,6 +12,7 @@ interface HabitListProps {
   error: string | null;
   onReload: () => void;
   onCreateClick?: () => void;
+  hasFilters?: boolean;
 }
 
 function LoadingSkeleton() {
@@ -31,7 +32,7 @@ function LoadingSkeleton() {
   );
 }
 
-export function HabitList({ habits, loading, error, onReload }: HabitListProps) {
+export function HabitList({ habits, loading, error, onReload, hasFilters }: HabitListProps) {
   const [editingHabit, setEditingHabit] = useState<HabitWithStats | null>(null);
   const [detailHabit, setDetailHabit] = useState<HabitWithStats | null>(null);
 
@@ -78,7 +79,11 @@ export function HabitList({ habits, loading, error, onReload }: HabitListProps) 
   if (habits.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500 mb-4">No habits yet. Create your first habit!</p>
+        <p className="text-gray-500 mb-4">
+          {hasFilters
+            ? 'No habits match your filters.'
+            : 'No habits yet. Create your first habit!'}
+        </p>
       </div>
     );
   }

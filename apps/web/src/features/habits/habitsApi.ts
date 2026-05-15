@@ -1,6 +1,7 @@
 import type {
   Habit,
   HabitWithStats,
+  HabitFilters,
   CreateHabitPayload,
   UpdateHabitPayload,
   CheckInsResponse,
@@ -32,8 +33,15 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export function fetchHabits(): Promise<HabitWithStats[]> {
-  return apiFetch<HabitWithStats[]>('/habits');
+export function fetchHabits(filters?: HabitFilters): Promise<HabitWithStats[]> {
+  const params = new URLSearchParams();
+  if (filters?.search) params.set('search', filters.search);
+  if (filters?.status) params.set('status', filters.status);
+  if (filters?.completedToday !== null && filters?.completedToday !== undefined) {
+    params.set('completedToday', String(filters.completedToday));
+  }
+  const qs = params.toString();
+  return apiFetch<HabitWithStats[]>(qs ? `/habits?${qs}` : '/habits');
 }
 
 export function fetchHabit(id: string): Promise<HabitWithStats> {
