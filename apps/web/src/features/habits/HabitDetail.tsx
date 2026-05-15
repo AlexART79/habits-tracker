@@ -1,51 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { HabitWithStats, HabitStatus } from './types';
+import type { HabitWithStats } from './types';
 import { fetchCheckIns } from './habitsApi';
+import { HabitStatCard } from './HabitStatCard';
+import { STATUS_BADGE_CLASSES, WEEKDAYS, MODAL_BACKDROP_CLASSES } from './constants';
+import { parseYYYYMM, buildCalendarDays, shiftMonth, monthLabel } from './calendarUtils';
 
 interface HabitDetailProps {
   habit: HabitWithStats;
   onClose: () => void;
-}
-
-const statusBadge: Record<HabitStatus, string> = {
-  ACTIVE: 'bg-green-100 text-green-800',
-  PAUSED: 'bg-yellow-100 text-yellow-800',
-  ARCHIVED: 'bg-gray-100 text-gray-600',
-};
-
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-function toYYYYMM(year: number, month: number): string {
-  return `${year}-${String(month).padStart(2, '0')}`;
-}
-
-function buildCalendarDays(year: number, month: number): (string | null)[] {
-  const firstDay = new Date(year, month - 1, 1).getDay();
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const cells: (string | null)[] = Array(firstDay).fill(null);
-  for (let d = 1; d <= daysInMonth; d++) {
-    cells.push(`${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
-  }
-  return cells;
-}
-
-function parseYYYYMM(ym: string): { year: number; month: number } {
-  const [y, m] = ym.split('-').map(Number);
-  return { year: y, month: m };
-}
-
-function shiftMonth(ym: string, delta: number): string {
-  const { year, month } = parseYYYYMM(ym);
-  const d = new Date(year, month - 1 + delta, 1);
-  return toYYYYMM(d.getFullYear(), d.getMonth() + 1);
-}
-
-function monthLabel(ym: string): string {
-  const { year, month } = parseYYYYMM(ym);
-  return new Date(year, month - 1, 1).toLocaleDateString(undefined, {
-    month: 'long',
-    year: 'numeric',
-  });
 }
 
 export function HabitDetail({ habit, onClose }: HabitDetailProps) {
@@ -82,7 +44,7 @@ export function HabitDetail({ habit, onClose }: HabitDetailProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className={MODAL_BACKDROP_CLASSES}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -102,7 +64,7 @@ export function HabitDetail({ habit, onClose }: HabitDetailProps) {
             )}
           </div>
           <span
-            className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge[habit.status]}`}
+            className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_BADGE_CLASSES[habit.status]}`}
           >
             {habit.status}
           </span>
@@ -110,18 +72,9 @@ export function HabitDetail({ habit, onClose }: HabitDetailProps) {
 
         <div className="px-5 py-4 border-b border-gray-100">
           <div className="flex gap-6 text-sm">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{habit.currentStreak}</p>
-              <p className="text-xs text-gray-500 mt-0.5">Current streak</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{habit.bestStreak}</p>
-              <p className="text-xs text-gray-500 mt-0.5">Best streak</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{habit.totalCheckIns}</p>
-              <p className="text-xs text-gray-500 mt-0.5">Total check-ins</p>
-            </div>
+            <HabitStatCard value={habit.currentStreak} label="Current streak" />
+            <HabitStatCard value={habit.bestStreak} label="Best streak" />
+            <HabitStatCard value={habit.totalCheckIns} label="Total check-ins" />
           </div>
         </div>
 

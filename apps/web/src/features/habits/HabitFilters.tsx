@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import type { HabitFilters, HabitStatus } from './types';
+import {
+  FILTER_DEBOUNCE_MS,
+  STATUS_FILTER_OPTIONS,
+  COMPLETION_FILTER_OPTIONS,
+} from './constants';
 
 interface HabitFiltersProps {
   filters: HabitFilters;
   onChange: (filters: HabitFilters) => void;
 }
-
-const DEBOUNCE_MS = 300;
 
 export function HabitFilters({ filters, onChange }: HabitFiltersProps) {
   const [searchDraft, setSearchDraft] = useState(filters.search ?? '');
@@ -16,7 +19,7 @@ export function HabitFilters({ filters, onChange }: HabitFiltersProps) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       onChange({ ...filters, search: searchDraft || undefined });
-    }, DEBOUNCE_MS);
+    }, FILTER_DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
@@ -50,10 +53,11 @@ export function HabitFilters({ filters, onChange }: HabitFiltersProps) {
         onChange={handleStatusChange}
         className="sm:w-40 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       >
-        <option value="">All statuses</option>
-        <option value="ACTIVE">Active</option>
-        <option value="PAUSED">Paused</option>
-        <option value="ARCHIVED">Archived</option>
+        {STATUS_FILTER_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
       </select>
       <select
         aria-label="Filter by completion"
@@ -67,9 +71,11 @@ export function HabitFilters({ filters, onChange }: HabitFiltersProps) {
         onChange={handleCompletedTodayChange}
         className="sm:w-48 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       >
-        <option value="">All habits</option>
-        <option value="true">Done today</option>
-        <option value="false">Not done today</option>
+        {COMPLETION_FILTER_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
       </select>
     </div>
   );

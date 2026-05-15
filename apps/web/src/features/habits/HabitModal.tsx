@@ -1,6 +1,7 @@
-import React, { useEffect, useId } from 'react';
+import { useEffect, useId } from 'react';
 import { createHabit, updateHabit } from './habitsApi';
 import { HabitForm } from './HabitForm';
+import { MODAL_BACKDROP_CLASSES } from './constants';
 import type { Habit, CreateHabitPayload, UpdateHabitPayload } from './types';
 
 interface HabitModalProps {
@@ -37,7 +38,7 @@ export function HabitModal({ mode, habit, onClose, onSaved }: HabitModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className={MODAL_BACKDROP_CLASSES}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

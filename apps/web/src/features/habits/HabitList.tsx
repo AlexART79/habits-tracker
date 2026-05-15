@@ -1,9 +1,11 @@
-import { useState } from 'react';
 import { Button } from '../../components/Button';
 import { HabitCard } from './HabitCard';
 import { HabitModal } from './HabitModal';
 import { HabitDetail } from './HabitDetail';
+import { HabitSkeletonList } from './HabitSkeletonList';
 import { updateHabit, deleteHabit, checkInToday, undoCheckIn } from './habitsApi';
+import { useHabitListModals } from './useHabitListModals';
+import { CONFIRM_ARCHIVE, CONFIRM_DELETE } from './constants';
 import type { HabitWithStats, HabitStatus } from './types';
 
 interface HabitListProps {
@@ -15,26 +17,9 @@ interface HabitListProps {
   hasFilters?: boolean;
 }
 
-function LoadingSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 animate-pulse"
-        >
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-3" />
-          <div className="h-3 bg-gray-100 rounded w-1/2 mb-6" />
-          <div className="h-3 bg-gray-100 rounded w-1/4" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function HabitList({ habits, loading, error, onReload, hasFilters }: HabitListProps) {
-  const [editingHabit, setEditingHabit] = useState<HabitWithStats | null>(null);
-  const [detailHabit, setDetailHabit] = useState<HabitWithStats | null>(null);
+  const { editingHabit, detailHabit, openEdit, closeEdit, openDetail, closeDetail } =
+    useHabitListModals();
 
   async function handleStatusChange(habit: HabitWithStats, status: HabitStatus) {
     await updateHabit(habit.id, { status });
@@ -42,13 +27,13 @@ export function HabitList({ habits, loading, error, onReload, hasFilters }: Habi
   }
 
   async function handleArchive(habit: HabitWithStats) {
-    if (!window.confirm(`Archive "${habit.name}"? This cannot be undone.`)) return;
+    if (!window.confirm(CONFIRM_ARCHIVE(habit.name))) return;
     await updateHabit(habit.id, { status: 'ARCHIVED' });
     onReload();
   }
 
   async function handleDelete(habit: HabitWithStats) {
-    if (!window.confirm(`Delete "${habit.name}"? This cannot be undone.`)) return;
+    if (!window.confirm(CONFIRM_DELETE(habit.name))) return;
     await deleteHabit(habit.id);
     onReload();
   }
@@ -63,7 +48,7 @@ export function HabitList({ habits, loading, error, onReload, hasFilters }: Habi
     onReload();
   }
 
-  if (loading) return <LoadingSkeleton />;
+  if (loading) return <HabitSkeletonList />;
 
   if (error) {
     return (
@@ -95,13 +80,13 @@ export function HabitList({ habits, loading, error, onReload, hasFilters }: Habi
           <HabitCard
             key={habit.id}
             habit={habit}
-            onEdit={setEditingHabit}
+            onEdit={openEdit}
             onDelete={handleDelete}
             onArchive={handleArchive}
             onStatusChange={handleStatusChange}
             onCheckIn={handleCheckIn}
             onUndoCheckIn={handleUndoCheckIn}
-            onViewDetail={setDetailHabit}
+            onViewDetail={openDetail}
           />
         ))}
       </div>
@@ -109,15 +94,15 @@ export function HabitList({ habits, loading, error, onReload, hasFilters }: Habi
         <HabitModal
           mode="edit"
           habit={editingHabit}
-          onClose={() => setEditingHabit(null)}
+          onClose={closeEdit}
           onSaved={() => {
-            setEditingHabit(null);
+            closeEdit();
             onReload();
           }}
         />
       )}
       {detailHabit && (
-        <HabitDetail habit={detailHabit} onClose={() => setDetailHabit(null)} />
+        <HabitDetail habit={detailHabit} onClose={closeDetail} />
       )}
     </>
   );
