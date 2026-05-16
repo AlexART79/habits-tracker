@@ -32,7 +32,11 @@ export function useNotifications() {
         return;
       }
       if (msg.type === 'milestone.reached' && msg.payload) {
-        setNotifications((prev) => [...prev, msg.payload!]);
+        setNotifications((prev) =>
+          prev.some((n) => n.notificationId === msg.payload!.notificationId)
+            ? prev
+            : [...prev, msg.payload!],
+        );
       }
     });
 

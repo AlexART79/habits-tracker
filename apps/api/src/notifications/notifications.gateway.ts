@@ -27,6 +27,11 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   ) {}
 
   async handleConnection(client: WebSocket, request: IncomingMessage): Promise<void> {
+    // Buffer messages immediately so none are lost during async auth
+    const pending: string[] = [];
+    const buffer = (raw: { toString(): string }) => pending.push(raw.toString());
+    client.on('message', buffer);
+
     try {
       await promisify(this.sessionMiddleware)(
         request as Parameters<RequestHandler>[0],
@@ -46,9 +51,14 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     this.clients.set(client, userId);
     this.logger.log(`Client connected: ${userId}`);
 
+    client.off('message', buffer);
     client.on('message', (raw) => {
       void this.handleMessage(client, raw.toString());
     });
+
+    for (const raw of pending) {
+      void this.handleMessage(client, raw);
+    }
   }
 
   handleDisconnect(client: WebSocket): void {

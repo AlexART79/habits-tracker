@@ -21,7 +21,9 @@ export class MilestoneService {
       where: { userId, status: 'ACTIVE' },
       include: {
         checkIns: { select: { date: true }, orderBy: { date: 'asc' } },
-        milestoneNotifications: { select: { milestone: true } },
+        milestoneNotifications: {
+          select: { id: true, milestone: true, acknowledgedAt: true },
+        },
       },
     });
 
@@ -31,21 +33,32 @@ export class MilestoneService {
     for (const habit of habits) {
       const dates = habit.checkIns.map((ci) => ci.date);
       const { currentStreak } = calculateStreaks(dates, today);
-      const existing = new Set(habit.milestoneNotifications.map((mn) => mn.milestone));
+
+      const alreadyTracked = new Set(habit.milestoneNotifications.map((mn) => mn.milestone));
+      // pending = unacknowledged notifications to surface (id keyed by milestone)
+      const pending = new Map(
+        habit.milestoneNotifications
+          .filter((mn) => !mn.acknowledgedAt)
+          .map((mn) => [mn.milestone, mn.id]),
+      );
 
       for (const milestone of MILESTONES) {
-        if (currentStreak >= milestone && !existing.has(milestone)) {
+        if (currentStreak >= milestone && !alreadyTracked.has(milestone)) {
           const notification = await this.prisma.milestoneNotification.create({
             data: { habitId: habit.id, milestone },
           });
-          results.push({
-            notificationId: notification.id,
-            habitId: habit.id,
-            habitName: habit.name,
-            milestone,
-            currentStreak,
-          });
+          pending.set(milestone, notification.id);
         }
+      }
+
+      for (const [milestone, notificationId] of pending) {
+        results.push({
+          notificationId,
+          habitId: habit.id,
+          habitName: habit.name,
+          milestone,
+          currentStreak,
+        });
       }
     }
 
