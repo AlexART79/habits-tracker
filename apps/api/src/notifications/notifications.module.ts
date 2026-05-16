@@ -7,5 +7,6 @@ import { MilestoneService } from './milestone.service';
 @Module({
   imports: [PrismaModule, SessionConfigModule],
   providers: [NotificationsGateway, MilestoneService],
+  exports: [NotificationsGateway, MilestoneService],
 })
 export class NotificationsModule {}

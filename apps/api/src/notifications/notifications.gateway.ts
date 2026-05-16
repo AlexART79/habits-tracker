@@ -5,7 +5,7 @@ import type { IncomingMessage } from 'http';
 import type { RequestHandler } from 'express';
 import type WebSocket from 'ws';
 import { SESSION_MIDDLEWARE } from '../config/session.config';
-import { MilestoneService } from './milestone.service';
+import { MilestoneService, type MilestonePayload } from './milestone.service';
 
 interface SessionRequest extends IncomingMessage {
   session?: { passport?: { user?: string } };
@@ -58,6 +58,17 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
     for (const raw of pending) {
       void this.handleMessage(client, raw);
+    }
+  }
+
+  sendMilestonesToUser(userId: string, milestones: MilestonePayload[]): void {
+    if (milestones.length === 0) return;
+    for (const [client, clientUserId] of this.clients) {
+      if (clientUserId === userId) {
+        for (const payload of milestones) {
+          client.send(JSON.stringify({ type: 'milestone.reached', payload }));
+        }
+      }
     }
   }
 

@@ -65,6 +65,41 @@ export class MilestoneService {
     return results;
   }
 
+  async evaluateHabitMilestones(userId: string, habitId: string): Promise<MilestonePayload[]> {
+    const habit = await this.prisma.habit.findUnique({
+      where: { id: habitId, userId },
+      include: {
+        checkIns: { select: { date: true }, orderBy: { date: 'asc' } },
+        milestoneNotifications: { select: { milestone: true } },
+      },
+    });
+
+    if (!habit) return [];
+
+    const today = getToday();
+    const dates = habit.checkIns.map((ci) => ci.date);
+    const { currentStreak } = calculateStreaks(dates, today);
+    const alreadyTracked = new Set(habit.milestoneNotifications.map((mn) => mn.milestone));
+    const results: MilestonePayload[] = [];
+
+    for (const milestone of MILESTONES) {
+      if (currentStreak >= milestone && !alreadyTracked.has(milestone)) {
+        const notification = await this.prisma.milestoneNotification.create({
+          data: { habitId: habit.id, milestone },
+        });
+        results.push({
+          notificationId: notification.id,
+          habitId: habit.id,
+          habitName: habit.name,
+          milestone,
+          currentStreak,
+        });
+      }
+    }
+
+    return results;
+  }
+
   async acknowledge(notificationId: string): Promise<void> {
     await this.prisma.milestoneNotification.update({
       where: { id: notificationId },

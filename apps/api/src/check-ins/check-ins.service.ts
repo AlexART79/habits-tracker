@@ -8,10 +8,16 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CheckIn } from '@prisma/client';
 import { getToday } from '../streaks/streak.util';
+import { MilestoneService } from '../notifications/milestone.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class CheckInsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly milestoneService: MilestoneService,
+    private readonly notificationsGateway: NotificationsGateway,
+  ) {}
 
   private async findHabitOwnedOrThrow(habitId: string, userId: string) {
     const habit = await this.prisma.habit.findUnique({ where: { id: habitId } });
@@ -25,8 +31,9 @@ export class CheckInsService {
     if (habit.status !== 'ACTIVE') {
       throw new BadRequestException('Only active habits can be checked in');
     }
+    let checkIn: CheckIn;
     try {
-      return await this.prisma.checkIn.create({
+      checkIn = await this.prisma.checkIn.create({
         data: { habitId, date: getToday() },
       });
     } catch (err: unknown) {
@@ -40,6 +47,11 @@ export class CheckInsService {
       }
       throw err;
     }
+
+    const milestones = await this.milestoneService.evaluateHabitMilestones(userId, habitId);
+    this.notificationsGateway.sendMilestonesToUser(userId, milestones);
+
+    return checkIn;
   }
 
   async undoToday(habitId: string, userId: string): Promise<void> {
