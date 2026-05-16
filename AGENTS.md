@@ -33,9 +33,9 @@ URLs:
 
 Before considering any task complete, run and pass:
 
-npm run typecheck
-npm run lint -- --fix
-npm test
+- npm run typecheck
+- npm run lint -- --fix
+- npm test
 
 _running 'npm run lint -- --fix' to fix all autofixable errors will save a lot of time and tokens_
 
@@ -50,45 +50,6 @@ Never trust client-provided userId.
 Every habit, check-in, and notification operation must be scoped to the authenticated user.
 
 Tests must not call real Google or GitHub services.
-
-## Windows and PowerShell rules
-
-The primary developer environment is Windows with PowerShell.
-
-When suggesting or running terminal commands:
-
-- Prefer PowerShell-compatible commands.
-- Do not assume Bash, Zsh, sed, awk, grep, cat, rm -rf, cp, mv, export, or heredocs are available.
-- Prefer separate commands instead of Bash chains.
-- Avoid Bash-specific syntax like:
-  - export NAME=value
-  - VAR=value command
-  - rm -rf
-  - cp -r
-  - cat <<EOF
-  - sed -i
-  - grep
-- Use PowerShell equivalents when needed:
-  - Set env var for current session: $env:NAME = "value"
-  - Remove folder: Remove-Item -Recurse -Force .\path
-  - Create folder: New-Item -ItemType Directory -Force .\path
-  - Copy item: Copy-Item .\source .\dest -Recurse
-  - Read file: Get-Content .\file.txt
-  - Write file: Set-Content .\file.txt "content"
-- If a command is cross-platform through npm scripts, prefer the npm script.
-
-Good examples:
-
-npm install
-npm run dev
-npm run typecheck
-npm run lint
-npm test
-
-PowerShell env var example:
-
-$env:DATABASE_URL = "file:./dev.db"
-npm run prisma:migrate -w apps/api
 
 ## Development workflow
 
